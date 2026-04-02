@@ -1,0 +1,62 @@
+@model PostMatchSummary.Models.Match
+
+@{
+    var summary = ViewBag.Summary as PostMatchSummary.Models.MatchSummary;
+}
+
+@* MATCH SUMMARY *@
+<div style="background:#f0f0f0; padding:12px; margin-bottom:16px; border-radius:6px">
+    <h2>Match: @summary?.MatchId</h2>
+    <p>🕐 Duration: <strong>@summary?.DurationMinutes min</strong> |
+       🎮 Mode: <strong>@summary?.GameMode</strong> |
+       📅 Date: <strong>@Model.GameCreation.ToString("dd.MM.yyyy HH:mm")</strong></p>
+    <p>🏆 Winner: <strong>@summary?.WinnerTeamName</strong> |
+       ⚔️ Total Kills: <strong>@summary?.TotalKills</strong></p>
+</div>
+
+@* MVP *@
+<div style="margin-bottom:16px">
+    @if (ViewBag.TopKiller != null)
+    {
+        <p>🔫 Top Killer: <strong>@ViewBag.TopKiller.SummonerName</strong> (@ViewBag.TopKiller.Champion.Name) — @ViewBag.TopKiller.Kills kills</p>
+    }
+    @if (ViewBag.TopCS != null)
+    {
+        <p>🌾 Top CS: <strong>@ViewBag.TopCS.SummonerName</strong> (@ViewBag.TopCS.Champion.Name) — @ViewBag.TopCS.CS CS</p>
+    }
+    @if (ViewBag.BestKDA != null)
+    {
+        <p>⭐ Best KDA: <strong>@ViewBag.BestKDA.SummonerName</strong> (@ViewBag.BestKDA.Champion.Name) — @ViewBag.BestKDA.Kills/@ViewBag.BestKDA.Deaths/@ViewBag.BestKDA.Assists</p>
+    }
+</div>
+
+@* TIMOVI *@
+@foreach (var team in Model.Teams)
+{
+    <h3>@team.TeamName — @(team.Win ? "✅ Victory" : "❌ Defeat") | Total Kills: @team.TotalKills | Gold: @team.TotalGold</h3>
+    <table border="1" cellpadding="6">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Champion</th>
+                <th>Role</th>
+                <th>K/D/A</th>
+                <th>CS</th>
+                <th>Gold</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in team.Players)
+            {
+                <tr>
+                    <td>@p.SummonerName</td>
+                    <td>@p.Champion.Name</td>
+                    <td>@p.Role</td>
+                    <td>@p.Kills/@p.Deaths/@p.Assists</td>
+                    <td>@p.CS</td>
+                    <td>@p.GoldEarned</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

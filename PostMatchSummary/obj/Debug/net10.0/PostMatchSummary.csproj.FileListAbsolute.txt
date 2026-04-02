@@ -95,3 +95,4 @@ C:\Users\Matej\Desktop\ASP.NET\PostMatchSummary\obj\Debug\net10.0\refint\PostMat
 C:\Users\Matej\Desktop\ASP.NET\PostMatchSummary\obj\Debug\net10.0\PostMatchSummary.pdb
 C:\Users\Matej\Desktop\ASP.NET\PostMatchSummary\obj\Debug\net10.0\PostMatchSummary.genruntimeconfig.cache
 C:\Users\Matej\Desktop\ASP.NET\PostMatchSummary\obj\Debug\net10.0\ref\PostMatchSummary.dll
+C:\Users\Matej\Desktop\ASP.NET\PostMatchSummary\obj\Debug\net10.0\PostMatchSummary.sourcelink.json

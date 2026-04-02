@@ -1,0 +1,101 @@
+@model string
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Raw JSON - @ViewBag.MatchId</title>
+    <style>
+        body {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            margin: 0;
+            padding: 20px;
+        }
+        .toolbar {
+            background: #2d2d2d;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .toolbar a {
+            color: #4fc3f7;
+            text-decoration: none;
+            padding: 6px 14px;
+            border: 1px solid #4fc3f7;
+            border-radius: 4px;
+        }
+        .toolbar a:hover { background: #4fc3f7; color: #1e1e1e; }
+        .toolbar span { color: #aaa; font-size: 14px; }
+
+        pre {
+            background: #252526;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            line-height: 1.6;
+            font-size: 13px;
+            border: 1px solid #3c3c3c;
+        }
+
+        /* Syntax highlighting */
+        .json-key    { color: #9cdcfe; }
+        .json-string { color: #ce9178; }
+        .json-number { color: #b5cea8; }
+        .json-bool   { color: #569cd6; }
+        .json-null   { color: #569cd6; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <a href="/PostMatch?matchId=@ViewBag.MatchId">← Natrag na prikaz</a>
+        <span>📄 Raw JSON za match: <strong style="color:white">@ViewBag.MatchId</strong></span>
+        <button onclick="copyJson()" style="background:#4caf50;color:white;border:none;padding:6px 14px;border-radius:4px;cursor:pointer">📋 Kopiraj JSON</button>
+    </div>
+
+    <pre id="jsonContent">@Html.Raw(HighlightJson(Model))</pre>
+
+    <script>
+        function copyJson() {
+            const text = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model));
+            navigator.clipboard.writeText(text).then(() => alert('JSON kopiran!'));
+        }
+    </script>
+</body>
+</html>
+
+@functions {
+    string HighlightJson(string json)
+    {
+        // Syntax highlight JSON
+        var result = System.Text.RegularExpressions.Regex.Replace(
+            System.Web.HttpUtility.HtmlEncode(json),
+            @"""(.*?)""\s*:",
+            "<span class='json-key'>\"$1\"</span>:"
+        );
+        result = System.Text.RegularExpressions.Regex.Replace(
+            result,
+            @":\s*""(.*?)""",
+            ": <span class='json-string'>\"$1\"</span>"
+        );
+        result = System.Text.RegularExpressions.Regex.Replace(
+            result,
+            @":\s*(\d+\.?\d*)",
+            ": <span class='json-number'>$1</span>"
+        );
+        result = System.Text.RegularExpressions.Regex.Replace(
+            result,
+            @":\s*(true|false)",
+            ": <span class='json-bool'>$1</span>"
+        );
+        result = System.Text.RegularExpressions.Regex.Replace(
+            result,
+            @":\s*(null)",
+            ": <span class='json-null'>$1</span>"
+        );
+        return result;
+    }
+}
