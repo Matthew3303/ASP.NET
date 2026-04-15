@@ -5,46 +5,244 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - PostMatchSummary</title>
     <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-surface: #1a1a2e;
+            --bg-elevated: #16213e;
+            --accent-red: #e94560;
+            --accent-blue: #0f3460;
+            --text-primary: #e0e0e0;
+            --text-muted: #8892a4;
+            --win: #00b894;
+            --loss: #e94560;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: var(--bg-surface);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 16px 24px;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-red);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .brand:hover {
+            color: #ff6b7a;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        main {
+            display: flex;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        aside {
+            width: 220px;
+            background: var(--bg-surface);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 24px 0;
+            flex-shrink: 0;
+        }
+
+        nav.sidebar-nav {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+        }
+
+        .nav-link {
+            flex: 1;
+            padding: 12px 24px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: rgba(233, 69, 96, 0.05);
+        }
+
+        .nav-link.active {
+            color: var(--accent-red);
+            background: var(--bg-elevated);
+            border-left-color: var(--accent-red);
+            font-weight: 600;
+        }
+
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 100%;
+        }
+
+        footer {
+            background: var(--bg-surface);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: auto;
+        }
+
+        footer a {
+            color: var(--accent-red);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        footer a:hover {
+            color: var(--text-primary);
+        }
+
+        @@media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            main {
+                flex-direction: column;
+            }
+
+            aside {
+                width: 100%;
+                max-height: 0;
+                overflow: hidden;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                padding: 0;
+                transition: max-height 0.3s ease;
+            }
+
+            aside.open {
+                max-height: 400px;
+                padding: 24px 0;
+            }
+
+            .main-content {
+                padding: 16px;
+            }
+        }
+    </style>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PostMatchSummary.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">PostMatchSummary</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - PostMatchSummary - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        <div class="header-content">
+            <a asp-controller="Home" asp-action="Index" class="brand">🎮 League Post Match Summary</a>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
         </div>
-    </footer>
+    </header>
+
+    <main>
+        <aside id="sidebar" class="sidebar">
+            <nav class="sidebar-nav">
+                <div class="nav-item">
+                    <a asp-controller="Home" asp-action="Index" 
+                       class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                        🏠 Home
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a asp-controller="PostMatch" asp-action="Index" 
+                       class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "PostMatch" && (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Details") ? "active" : "")">
+                        🎯 Matches
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a asp-controller="Player" asp-action="Index" 
+                       class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Player" ? "active" : "")">
+                        👥 Players
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <div class="content-wrapper">
+            <div class="main-content">
+                @RenderBody()
+            </div>
+            <footer>
+                &copy; 2026 - PostMatchSummary
+            </footer>
+        </div>
+    </main>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.getElementById('mobileMenuToggle').addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // Close sidebar when a nav link is clicked on mobile
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function () {
+                const sidebar = document.getElementById('sidebar');
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

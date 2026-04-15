@@ -1,15 +1,13 @@
 {
   "hooks": {
-    "UserPromptSubmit": [
+    "Stop": [
       {
-        "type": "command",
-        "command": "powershell.exe -ExecutionPolicy Bypass -Command \"$input | Add-Content -Path 'C:\\git\\.github\\hooks\\agent_log.txt'\""
-      }
-    ],
-    "preToolUse": [
-      {
-        "type": "command",
-        "command": "powershell.exe -ExecutionPolicy Bypass -Command \"$input | Add-Content -Path 'C:\\git\\.github\\hooks\\agent_log.txt'\""
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\Matej\\Desktop\\ASP.NET\\.github\\hooks\\logs_hook.ps1\""
+          }
+        ]
       }
     ]
   }

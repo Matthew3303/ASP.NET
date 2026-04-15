@@ -1,0 +1,427 @@
+@model PostMatchSummary.Models.Player
+
+@{
+    ViewData["Title"] = Model.SummonerName;
+}
+
+<style>
+    :root {
+        --bg-primary: #0f0f1a;
+        --bg-surface: #1a1a2e;
+        --bg-elevated: #16213e;
+        --accent-red: #e94560;
+        --accent-blue: #0f3460;
+        --accent-purple: #533483;
+        --accent-gold: #ffd700;
+        --text-primary: #e0e0e0;
+        --text-muted: #8892a4;
+        --win: #00b894;
+        --loss: #e94560;
+    }
+
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 24px;
+        font-size: 14px;
+    }
+
+    .breadcrumb-nav a {
+        color: var(--accent-red);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .breadcrumb-nav a:hover {
+        color: var(--text-primary);
+    }
+
+    .breadcrumb-nav .sep {
+        color: var(--text-muted);
+    }
+
+    .breadcrumb-nav .current {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .details-container {
+        display: grid;
+        grid-template-columns: 3fr 2fr;
+        gap: 24px;
+        margin-top: 24px;
+    }
+
+    @@media (max-width: 768px) {
+        .details-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .card {
+        background: var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        padding: 24px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .card-title {
+        color: var(--text-primary);
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .card-subtitle {
+        color: var(--text-muted);
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .info-section {
+        margin-bottom: 24px;
+    }
+
+    .info-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: var(--text-muted);
+        font-size: 13px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        color: var(--text-primary);
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .info-value.stat {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .summoner-name {
+        font-size: 28px;
+        color: var(--accent-red);
+        font-weight: 700;
+    }
+
+    .champion-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: rgba(233, 69, 96, 0.05);
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    .champion-icon {
+        font-size: 32px;
+    }
+
+    .champion-details h3 {
+        margin: 0 0 4px 0;
+        color: var(--accent-blue);
+        font-size: 16px;
+    }
+
+    .champion-details p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+
+    .kda-display {
+        display: flex;
+        gap: 16px;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+        margin: 16px 0;
+    }
+
+    .kda-stat {
+        flex: 1;
+        text-align: center;
+    }
+
+    .kda-label {
+        color: var(--text-muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+
+    .kda-value {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .kills {
+        color: var(--win);
+    }
+
+    .deaths {
+        color: var(--loss);
+    }
+
+    .assists {
+        color: var(--accent-gold);
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin: 16px 0;
+    }
+
+    .stat-box {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 12px;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .stat-box-label {
+        color: var(--text-muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .stat-box-value {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .stat-box-value.gold {
+        color: var(--accent-gold);
+    }
+
+    .win-badge {
+        display: inline-block;
+        background: rgba(0, 184, 148, 0.15);
+        color: var(--win);
+        border: 1px solid var(--win);
+        padding: 6px 12px;
+        border-radius: 3px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .loss-badge {
+        display: inline-block;
+        background: rgba(233, 69, 96, 0.15);
+        color: var(--loss);
+        border: 1px solid var(--loss);
+        padding: 6px 12px;
+        border-radius: 3px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .role-badge {
+        display: inline-block;
+        background: var(--bg-elevated);
+        color: var(--text-muted);
+        padding: 4px 10px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 24px;
+        color: var(--accent-red);
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+    }
+
+    .back-link:hover {
+        color: var(--text-primary);
+    }
+</style>
+
+<a asp-controller="Player" asp-action="Index" class="back-link">← Back to Players</a>
+
+<nav class="breadcrumb-nav">
+    <a asp-controller="Home" asp-action="Index">🏠 Home</a>
+    <span class="sep">›</span>
+    <a asp-controller="Player" asp-action="Index">👥 Players</a>
+    <span class="sep">›</span>
+    <span class="current">@Model.SummonerName</span>
+</nav>
+
+<div class="details-container">
+    <!-- LEFT: Main Player Info -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h1 class="summoner-name">@Model.SummonerName</h1>
+                <p class="card-subtitle">@Model.Champion.Name · @Model.Role</p>
+            </div>
+            <div>
+                <span class="@(Model.Win ? "win-badge" : "loss-badge")">
+                    @(Model.Win ? "✅ Victory" : "❌ Defeat")
+                </span>
+            </div>
+        </div>
+
+        <div class="champion-info">
+            <div class="champion-icon">⚔️</div>
+            <div class="champion-details">
+                <h3>@Model.Champion.Name</h3>
+                <p>Role: <span class="role-badge">@Model.Role</span></p>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3 class="card-title" style="margin-bottom: 12px;">Combat Stats</h3>
+
+            <div class="kda-display">
+                <div class="kda-stat">
+                    <div class="kda-label">Kills</div>
+                    <p class="kda-value kills">@Model.Kills</p>
+                </div>
+                <div class="kda-stat">
+                    <div class="kda-label">Deaths</div>
+                    <p class="kda-value deaths">@Model.Deaths</p>
+                </div>
+                <div class="kda-stat">
+                    <div class="kda-label">Assists</div>
+                    <p class="kda-value assists">@Model.Assists</p>
+                </div>
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div class="stat-box-label">CS</div>
+                    <div class="stat-box-value">@Model.CS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-label">Gold Earned</div>
+                    <div class="stat-box-value gold">@Model.GoldEarned.ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Team != null)
+        {
+            <div class="info-section">
+                <h3 class="card-title" style="margin-bottom: 12px;">Team</h3>
+                <div class="info-row">
+                    <span class="info-label">Team</span>
+                    <span class="info-value">@Model.Team.TeamName</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Team Kills</span>
+                    <span class="info-value stat">@Model.Team.TotalKills</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Team Gold</span>
+                    <span class="info-value stat">@Model.Team.TotalGold.ToString("N0")</span>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- RIGHT: Summary Stats -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Summary</h2>
+        </div>
+
+        <div class="info-section">
+            <div class="info-row">
+                <span class="info-label">Summoner</span>
+                <span class="info-value">@Model.SummonerName</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Champion</span>
+                <span class="info-value">@Model.Champion.Name</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Role</span>
+                <span class="role-badge">@Model.Role</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Result</span>
+                <span class="@(Model.Win ? "win-badge" : "loss-badge")">
+                    @(Model.Win ? "✅ Win" : "❌ Loss")
+                </span>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3 class="card-title" style="font-size: 14px; margin-bottom: 8px;">Performance</h3>
+            <div class="info-row">
+                <span class="info-label">K/D/A Ratio</span>
+                <span class="info-value stat">@Model.Kills/@Model.Deaths/@Model.Assists</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">CS</span>
+                <span class="info-value stat">@Model.CS</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Gold</span>
+                <span class="info-value stat">@Model.GoldEarned.ToString("N0")</span>
+            </div>
+        </div>
+
+        @if (Model.Team != null)
+        {
+            <div class="info-section">
+                <h3 class="card-title" style="font-size: 14px; margin-bottom: 8px;">Team Info</h3>
+                <div class="info-row">
+                    <span class="info-label">Team</span>
+                    <span class="info-value">@Model.Team.TeamName</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Team Kills</span>
+                    <span class="info-value stat">@Model.Team.TotalKills</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Team Gold</span>
+                    <span class="info-value stat">@Model.Team.TotalGold.ToString("N0")</span>
+                </div>
+            </div>
+        }
+    </div>
+</div>

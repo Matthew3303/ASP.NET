@@ -1,0 +1,292 @@
+@model List<(PostMatchSummary.Models.Player, PostMatchSummary.Models.Match)>
+
+@{
+    ViewData["Title"] = "Players";
+}
+
+<style>
+    :root {
+        --bg-primary: #0f0f1a;
+        --bg-surface: #1a1a2e;
+        --bg-elevated: #16213e;
+        --accent-red: #e94560;
+        --accent-blue: #0f3460;
+        --text-primary: #e0e0e0;
+        --text-muted: #8892a4;
+        --win: #00b894;
+        --loss: #e94560;
+    }
+
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 24px;
+        font-size: 14px;
+    }
+
+    .breadcrumb-nav a {
+        color: var(--accent-red);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .breadcrumb-nav a:hover {
+        color: var(--text-primary);
+    }
+
+    .breadcrumb-nav .sep {
+        color: var(--text-muted);
+    }
+
+    .breadcrumb-nav .current {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .page-header {
+        margin-bottom: 32px;
+    }
+
+    .page-header h1 {
+        color: var(--text-primary);
+        font-size: 28px;
+        margin: 0 0 8px 0;
+        font-weight: 600;
+    }
+
+    .page-header p {
+        color: var(--text-muted);
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .players-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .players-table thead {
+        background: var(--bg-elevated);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .players-table thead th {
+        color: var(--text-muted);
+        text-align: left;
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .players-table tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        transition: background 0.2s;
+    }
+
+    .players-table tbody tr:nth-child(odd) {
+        background: var(--bg-primary);
+    }
+
+    .players-table tbody tr:nth-child(even) {
+        background: var(--bg-surface);
+    }
+
+    .players-table tbody tr:hover {
+        background: rgba(233, 69, 96, 0.08);
+    }
+
+    .players-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .players-table td {
+        padding: 12px 16px;
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+
+    .player-name-cell {
+        cursor: pointer;
+    }
+
+    .player-name {
+        color: var(--accent-red);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+    .player-name:hover {
+        color: #ff6b7a;
+    }
+
+    .champion-name {
+        color: var(--accent-blue);
+        font-weight: 500;
+    }
+
+    .role-badge {
+        display: inline-block;
+        background: var(--bg-elevated);
+        color: var(--text-muted);
+        padding: 4px 10px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .kda {
+        font-family: 'Consolas', 'Courier New', monospace;
+        display: flex;
+        gap: 4px;
+    }
+
+    .kda .kills {
+        color: var(--win);
+        font-weight: 600;
+    }
+
+    .kda .deaths {
+        color: var(--loss);
+        font-weight: 600;
+    }
+
+    .kda .assists {
+        color: var(--text-muted);
+    }
+
+    .stat-value {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .team-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 500;
+        background: var(--bg-elevated);
+        color: var(--text-muted);
+    }
+
+    .win-badge {
+        background: rgba(0, 184, 148, 0.15);
+        color: var(--win);
+        border: 1px solid var(--win);
+    }
+
+    .loss-badge {
+        background: rgba(233, 69, 96, 0.15);
+        color: var(--loss);
+        border: 1px solid var(--loss);
+    }
+
+    .no-players {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-muted);
+    }
+
+    .no-players p {
+        margin: 0;
+        font-size: 16px;
+    }
+
+    /* Game Date Column Styling */
+    .players-table th:first-child,
+    .players-table td:first-child {
+        min-width: 150px;
+        width: 150px;
+    }
+
+    .players-table td:first-child .stat-value {
+        font-weight: 700;
+        color: var(--text-primary);
+        display: block;
+    }
+</style>
+
+<nav class="breadcrumb-nav">
+    <a asp-controller="Home" asp-action="Index">🏠 Home</a>
+    <span class="sep">›</span>
+    <span class="current">👥 Players</span>
+</nav>
+
+<div class="page-header">
+    <h1>👥 Players</h1>
+    <p>@Model.Count player appearance@(Model.Count != 1 ? "s" : "") across all games</p>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="no-players">
+        <p>No players found in cache. Load a match first.</p>
+    </div>
+}
+else
+{
+    <table class="players-table">
+        <thead>
+            <tr>
+                <th>Game Date</th>
+                <th>Summoner Name</th>
+                <th>Champion</th>
+                <th>Role</th>
+                <th>K/D/A</th>
+                <th>CS</th>
+                <th>Gold</th>
+                <th>Team</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var (player, match) in Model)
+            {
+                <tr>
+                    <td>
+                        <span class="stat-value">@match.GameCreation.ToString("d.M.yyyy")</span>
+                    </td>
+                    <td class="player-name-cell">
+                        <a asp-controller="Player" asp-action="Details" asp-route-name="@player.SummonerName" class="player-name">
+                            @player.SummonerName
+                        </a>
+                    </td>
+                    <td>
+                        <span class="champion-name">@player.Champion.Name</span>
+                    </td>
+                    <td>
+                        <span class="role-badge">@player.Role</span>
+                    </td>
+                    <td>
+                        <span class="kda">
+                            <span class="kills">@player.Kills</span>/<span class="deaths">@player.Deaths</span>/<span class="assists">@player.Assists</span>
+                        </span>
+                    </td>
+                    <td>
+                        <span class="stat-value">@player.CS</span>
+                    </td>
+                    <td>
+                        <span class="stat-value">@player.GoldEarned.ToString("N0")</span>
+                    </td>
+                    <td>
+                        <span class="team-badge">@(player.Team?.TeamName ?? "—")</span>
+                    </td>
+                    <td>
+                        <span class="team-badge @(player.Win ? "win-badge" : "loss-badge")">
+                            @(player.Win ? "✅ Win" : "❌ Loss")
+                        </span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,8 +1,515 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Dashboard";
+    var cacheService = ViewBag.MatchCache as PostMatchSummary.Services.MatchCacheService;
+    var allMatches = cacheService?.GetAll() ?? new();
+    var allPlayers = cacheService?.GetAllPlayers() ?? new();
+    
+    var avgDuration = allMatches.Count > 0 ? allMatches.Average(m => m.Duration) / 60 : 0;
+    var totalKills = allMatches.Sum(m => m.TotalKills);
+    var topKillMatch = allMatches.OrderByDescending(m => m.TotalKills).FirstOrDefault();
+    var topKDPlayer = allPlayers.OrderByDescending(p => (double)p.Kills / (p.Deaths > 0 ? p.Deaths : 1)).FirstOrDefault();
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    :root {
+        --bg-primary: #0f0f1a;
+        --bg-surface: #1a1a2e;
+        --bg-elevated: #16213e;
+        --accent-red: #e94560;
+        --accent-blue: #0f3460;
+        --accent-purple: #533483;
+        --accent-gold: #ffd700;
+        --text-primary: #e0e0e0;
+        --text-muted: #8892a4;
+        --win: #00b894;
+        --loss: #e94560;
+    }
+
+    .dashboard-header {
+        margin-bottom: 48px;
+    }
+
+    .dashboard-title {
+        font-size: 36px;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--accent-red), var(--accent-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+    }
+
+    .dashboard-subtitle {
+        font-size: 16px;
+        color: var(--text-muted);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 24px;
+        margin-bottom: 48px;
+    }
+
+    .stat-box {
+        background: var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .stat-box:hover {
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 4px 16px rgba(233, 69, 96, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .stat-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .stat-number {
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--accent-red);
+        font-family: 'Consolas', 'Courier New', monospace;
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .section-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 24px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .section-title::before {
+        content: '';
+        width: 3px;
+        height: 24px;
+        background: var(--accent-red);
+        border-radius: 2px;
+    }
+
+    .recent-matches-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 48px;
+    }
+
+    .match-card {
+        background: var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .match-card:hover {
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 4px 16px rgba(233, 69, 96, 0.1);
+        transform: translateY(-4px);
+    }
+
+    .match-card-header {
+        background: var(--bg-elevated);
+        padding: 16px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .match-card-id {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 11px;
+        color: var(--accent-red);
+        font-weight: 600;
+    }
+
+    .match-card-winner {
+        background: rgba(0, 184, 148, 0.15);
+        color: var(--win);
+        border: 1px solid var(--win);
+        padding: 4px 12px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .match-card-body {
+        padding: 16px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .match-card-date {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+    }
+
+    .match-card-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .match-card-stat {
+        text-align: center;
+    }
+
+    .match-card-stat-value {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--accent-red);
+        display: block;
+    }
+
+    .match-card-stat-label {
+        font-size: 10px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+
+    .match-card-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--accent-red);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        transition: color 0.2s;
+        margin-top: auto;
+    }
+
+    .match-card-link:hover {
+        color: var(--text-primary);
+    }
+
+    .leaderboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        margin-bottom: 48px;
+    }
+
+    .leaderboard-card {
+        background: var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .leaderboard-card h3 {
+        background: var(--bg-elevated);
+        padding: 16px;
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--accent-red);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .leaderboard-list {
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+
+    .leaderboard-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: background-color 0.2s;
+    }
+
+    .leaderboard-item:hover {
+        background: rgba(233, 69, 96, 0.05);
+    }
+
+    .leaderboard-item:last-child {
+        border-bottom: none;
+    }
+
+    .leaderboard-rank {
+        width: 30px;
+        height: 30px;
+        background: var(--bg-elevated);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--accent-red);
+        flex-shrink: 0;
+    }
+
+    .leaderboard-info {
+        flex: 1;
+    }
+
+    .leaderboard-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 13px;
+        margin-bottom: 2px;
+    }
+
+    .leaderboard-name a {
+        color: var(--accent-red);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .leaderboard-name a:hover {
+        color: var(--text-primary);
+    }
+
+    .leaderboard-detail {
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+
+    .leaderboard-value {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-weight: 600;
+        color: var(--accent-red);
+        font-size: 13px;
+    }
+
+    .cta-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 48px;
+    }
+
+    .cta-button {
+        padding: 16px 24px;
+        background: transparent;
+        border: 2px solid var(--accent-red);
+        color: var(--text-primary);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-decoration: none;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .cta-button:hover {
+        background: var(--accent-red);
+        color: #0f0f1a;
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 32px;
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    @@media (max-width: 768px) {
+        .dashboard-title {
+            font-size: 28px;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-number {
+            font-size: 28px;
+        }
+
+        .recent-matches-container {
+            grid-template-columns: 1fr;
+        }
+
+        .leaderboard {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="dashboard-header">
+    <h1 class="dashboard-title">🎮 League Dashboard</h1>
+    <p class="dashboard-subtitle">Real-time League of Legends match analytics and player statistics</p>
 </div>
+
+<div class="stats-grid">
+    <div class="stat-box">
+        <span class="stat-icon">🎯</span>
+        <div class="stat-number">@allMatches.Count</div>
+        <div class="stat-label">Total Matches</div>
+    </div>
+
+    <div class="stat-box">
+        <span class="stat-icon">👥</span>
+        <div class="stat-number">@allPlayers.Count</div>
+        <div class="stat-label">Unique Players</div>
+    </div>
+
+    <div class="stat-box">
+        <span class="stat-icon">⏱️</span>
+        <div class="stat-number">@Math.Round(avgDuration)</div>
+        <div class="stat-label">Avg Duration (min)</div>
+    </div>
+
+    <div class="stat-box">
+        <span class="stat-icon">⚔️</span>
+        <div class="stat-number">@totalKills</div>
+        <div class="stat-label">Total Kills</div>
+    </div>
+</div>
+
+<div class="cta-buttons">
+    <a asp-controller="PostMatch" asp-action="Index" class="cta-button">
+        📊 View All Matches
+    </a>
+    <a asp-controller="Player" asp-action="Index" class="cta-button">
+        👥 View All Players
+    </a>
+</div>
+
+@if (allMatches.Count > 0)
+{
+    <h2 class="section-title">🔥 Recent Matches</h2>
+    <div class="recent-matches-container">
+        @foreach (var match in allMatches.OrderByDescending(m => m.GameCreation).Take(5))
+        {
+            <div class="match-card">
+                <div class="match-card-header">
+                    <span class="match-card-id">@match.MatchId.Substring(0, Math.Min(10, match.MatchId.Length))</span>
+                    <span class="match-card-winner">@match.WinnerTeam?.TeamName</span>
+                </div>
+                <div class="match-card-body">
+                    <div class="match-card-date">@match.GameCreation.ToString("dd.MM.yyyy HH:mm")</div>
+                    <div class="match-card-stats">
+                        <div class="match-card-stat">
+                            <span class="match-card-stat-value">@(match.Duration / 60)</span>
+                            <span class="match-card-stat-label">Minutes</span>
+                        </div>
+                        <div class="match-card-stat">
+                            <span class="match-card-stat-value">@match.TotalKills</span>
+                            <span class="match-card-stat-label">Total Kills</span>
+                        </div>
+                    </div>
+                    <a asp-controller="PostMatch" asp-action="Details" asp-route-matchId="@match.MatchId" class="match-card-link">
+                        View Details →
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (allPlayers.Count > 0)
+{
+    <h2 class="section-title">🏆 Top Performers</h2>
+    <div class="leaderboard">
+        <div class="leaderboard-card">
+            <h3>👑 By Kill Count</h3>
+            <ul class="leaderboard-list">
+                @foreach (var player in allPlayers.OrderByDescending(p => p.Kills).Take(5))
+                {
+                    <li class="leaderboard-item">
+                        <div class="leaderboard-rank">@(allPlayers.OrderByDescending(p => p.Kills).ToList().IndexOf(player) + 1)</div>
+                        <div class="leaderboard-info">
+                            <div class="leaderboard-name">
+                                <a asp-controller="Player" asp-action="Details" asp-route-name="@player.SummonerName">
+                                    @player.SummonerName
+                                </a>
+                            </div>
+                            <div class="leaderboard-detail">@player.Champion.Name</div>
+                        </div>
+                        <div class="leaderboard-value">@player.Kills Kills</div>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="leaderboard-card">
+            <h3>🌾 By CS</h3>
+            <ul class="leaderboard-list">
+                @foreach (var player in allPlayers.OrderByDescending(p => p.CS).Take(5))
+                {
+                    <li class="leaderboard-item">
+                        <div class="leaderboard-rank">@(allPlayers.OrderByDescending(p => p.CS).ToList().IndexOf(player) + 1)</div>
+                        <div class="leaderboard-info">
+                            <div class="leaderboard-name">
+                                <a asp-controller="Player" asp-action="Details" asp-route-name="@player.SummonerName">
+                                    @player.SummonerName
+                                </a>
+                            </div>
+                            <div class="leaderboard-detail">@player.Champion.Name</div>
+                        </div>
+                        <div class="leaderboard-value">@player.CS CS</div>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="leaderboard-card">
+            <h3>💪 By K/D Ratio</h3>
+            <ul class="leaderboard-list">
+                @foreach (var player in allPlayers.OrderByDescending(p => (double)p.Kills / (p.Deaths > 0 ? p.Deaths : 1)).Take(5))
+                {
+                    var ratio = player.Deaths > 0 ? (double)player.Kills / player.Deaths : player.Kills;
+                    <li class="leaderboard-item">
+                        <div class="leaderboard-rank">@(allPlayers.OrderByDescending(p => (double)p.Kills / (p.Deaths > 0 ? p.Deaths : 1)).ToList().IndexOf(player) + 1)</div>
+                        <div class="leaderboard-info">
+                            <div class="leaderboard-name">
+                                <a asp-controller="Player" asp-action="Details" asp-route-name="@player.SummonerName">
+                                    @player.SummonerName
+                                </a>
+                            </div>
+                            <div class="leaderboard-detail">@player.Champion.Name</div>
+                        </div>
+                        <div class="leaderboard-value">@ratio.ToString("F1") K/D/A</div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+@if (allMatches.Count == 0)
+{
+    <div class="empty-message">
+        <p>📊 No matches loaded yet. Start by loading match data to see dashboard statistics.</p>
+    </div>
+}

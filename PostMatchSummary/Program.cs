@@ -4,8 +4,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<RiotService>();
+builder.Services.AddSingleton<MatchCacheService>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var cache = scope.ServiceProvider.GetRequiredService<MatchCacheService>();
+    var riot = scope.ServiceProvider.GetRequiredService<RiotService>();
+    await cache.InitializeAsync(riot);
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -14,13 +22,12 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
-app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

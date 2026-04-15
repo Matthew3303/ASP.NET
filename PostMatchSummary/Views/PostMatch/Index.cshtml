@@ -1,60 +1,320 @@
-@model PostMatchSummary.Models.Match
+@model List<PostMatchSummary.Models.Match>
 
 @{
-    var summary = ViewBag.Summary as PostMatchSummary.Models.MatchSummary;
+    ViewData["Title"] = "Matches";
+    var sortedMatches = Model.OrderByDescending(m => m.GameCreation).ToList();
 }
 
-@* MATCH SUMMARY *@
-<div style="background:#f0f0f0; padding:12px; margin-bottom:16px; border-radius:6px">
-    <h2>Match: @summary?.MatchId</h2>
-    <p>🕐 Duration: <strong>@summary?.DurationMinutes min</strong> |
-       🎮 Mode: <strong>@summary?.GameMode</strong> |
-       📅 Date: <strong>@Model.GameCreation.ToString("dd.MM.yyyy HH:mm")</strong></p>
-    <p>🏆 Winner: <strong>@summary?.WinnerTeamName</strong> |
-       ⚔️ Total Kills: <strong>@summary?.TotalKills</strong></p>
+<style>
+    :root {
+        --bg-primary: #0f0f1a;
+        --bg-surface: #1a1a2e;
+        --bg-elevated: #16213e;
+        --accent-red: #e94560;
+        --accent-blue: #0f3460;
+        --text-primary: #e0e0e0;
+        --text-muted: #8892a4;
+        --win: #00b894;
+        --loss: #e94560;
+    }
+
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 24px;
+        font-size: 14px;
+    }
+
+    .breadcrumb-nav a {
+        color: var(--accent-red);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .breadcrumb-nav a:hover {
+        color: var(--text-primary);
+    }
+
+    .breadcrumb-nav .sep {
+        color: var(--text-muted);
+    }
+
+    .breadcrumb-nav .current {
+        color: var(--text-primary);
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .add-match-btn {
+        padding: 10px 24px;
+        background: transparent;
+        border: 2px solid var(--accent-red);
+        color: var(--text-primary);
+        border-radius: 2px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .add-match-btn:hover {
+        background: var(--accent-red);
+        color: #0f0f1a;
+    }
+
+    .matches-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .matches-table thead {
+        background: var(--bg-elevated);
+        position: sticky;
+        top: 0;
+    }
+
+    .matches-table th {
+        padding: 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .matches-table tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        transition: background-color 0.2s;
+    }
+
+    .matches-table tbody tr:hover {
+        background: rgba(233, 69, 96, 0.08);
+    }
+
+    .matches-table td {
+        padding: 16px;
+        font-size: 14px;
+    }
+
+    .match-id {
+        font-family: 'Consolas', 'Courier New', monospace;
+        color: var(--accent-red);
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .match-id:hover {
+        color: #ff6b7a;
+    }
+
+    .match-date {
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+
+    .match-duration {
+        font-family: 'Consolas', 'Courier New', monospace;
+        color: var(--text-primary);
+    }
+
+    .match-mode {
+        display: inline-block;
+        background: var(--bg-elevated);
+        padding: 4px 12px;
+        border-radius: 3px;
+        font-size: 12px;
+        color: var(--text-primary);
+    }
+
+    .winner-team {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .kill-count {
+        font-family: 'Consolas', 'Courier New', monospace;
+        color: var(--accent-red);
+        font-weight: 600;
+    }
+
+    .result-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .result-badge.win {
+        background: rgba(0, 184, 148, 0.15);
+        color: var(--win);
+        border: 1px solid var(--win);
+    }
+
+    .result-badge.loss {
+        background: rgba(233, 69, 96, 0.15);
+        color: var(--loss);
+        border: 1px solid var(--loss);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 64px 32px;
+        color: var(--text-muted);
+    }
+
+    .empty-state h2 {
+        font-size: 20px;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
+
+    .empty-state p {
+        margin-bottom: 24px;
+    }
+
+    .json-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        background: var(--bg-elevated);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        color: var(--accent-blue);
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .json-link:hover {
+        background: var(--accent-blue);
+        color: var(--text-primary);
+        border-color: var(--accent-blue);
+    }
+
+    @@media (max-width: 1024px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .matches-table th,
+        .matches-table td {
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .match-id {
+            font-size: 12px;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .matches-table {
+            font-size: 12px;
+        }
+
+        .matches-table th,
+        .matches-table td {
+            padding: 8px;
+        }
+
+        .match-mode,
+        .result-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+        }
+    }
+</style>
+
+<nav class="breadcrumb-nav">
+    <a asp-controller="Home" asp-action="Index">🏠 Home</a>
+    <span class="sep">›</span>
+    <span class="current">🎯 Matches</span>
+</nav>
+
+<div class="page-header">
+    <h1 class="page-title">⚔️ All Matches</h1>
 </div>
 
-@* MVP *@
-<div style="margin-bottom:16px">
-    @if (ViewBag.TopKiller != null)
-    {
-        <p>🔫 Top Killer: <strong>@ViewBag.TopKiller.SummonerName</strong> (@ViewBag.TopKiller.Champion.Name) — @ViewBag.TopKiller.Kills kills</p>
-    }
-    @if (ViewBag.TopCS != null)
-    {
-        <p>🌾 Top CS: <strong>@ViewBag.TopCS.SummonerName</strong> (@ViewBag.TopCS.Champion.Name) — @ViewBag.TopCS.CS CS</p>
-    }
-    @if (ViewBag.BestKDA != null)
-    {
-        <p>⭐ Best KDA: <strong>@ViewBag.BestKDA.SummonerName</strong> (@ViewBag.BestKDA.Champion.Name) — @ViewBag.BestKDA.Kills/@ViewBag.BestKDA.Deaths/@ViewBag.BestKDA.Assists</p>
-    }
-</div>
-
-@* TIMOVI *@
-@foreach (var team in Model.Teams)
+@if (sortedMatches.Count == 0)
 {
-    <h3>@team.TeamName — @(team.Win ? "✅ Victory" : "❌ Defeat") | Total Kills: @team.TotalKills | Gold: @team.TotalGold</h3>
-    <table border="1" cellpadding="6">
+    <div class="empty-state">
+        <h2>🎮 No Matches Yet</h2>
+        <p>There are currently no matches loaded in the cache.</p>
+    </div>
+}
+else
+{
+    <table class="matches-table">
         <thead>
             <tr>
-                <th>Player</th>
-                <th>Champion</th>
-                <th>Role</th>
-                <th>K/D/A</th>
-                <th>CS</th>
-                <th>Gold</th>
+                <th>Match ID</th>
+                <th>Date & Time</th>
+                <th>Duration</th>
+                <th>Mode</th>
+                <th>Winner Team</th>
+                <th>Total Kills</th>
+                <th>Players</th>
+                <th>JSON</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var p in team.Players)
+            @foreach (var match in sortedMatches)
             {
                 <tr>
-                    <td>@p.SummonerName</td>
-                    <td>@p.Champion.Name</td>
-                    <td>@p.Role</td>
-                    <td>@p.Kills/@p.Deaths/@p.Assists</td>
-                    <td>@p.CS</td>
-                    <td>@p.GoldEarned</td>
+                    <td>
+                        <a asp-controller="PostMatch" asp-action="Details" asp-route-matchId="@match.MatchId" class="match-id">
+                            @match.MatchId.Substring(0, Math.Min(8, match.MatchId.Length))...
+                        </a>
+                    </td>
+                    <td>
+                        <div class="match-date">@match.GameCreation.ToString("dd.MM.yyyy")</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">@match.GameCreation.ToString("HH:mm")</div>
+                    </td>
+                    <td class="match-duration">@(match.Duration / 60) min</td>
+                    <td>
+                        <span class="match-mode">@match.GameMode</span>
+                    </td>
+                    <td>
+                        <span class="winner-team">@match.WinnerTeam?.TeamName</span>
+                    </td>
+                    <td class="kill-count">@match.TotalKills</td>
+                    <td>@match.Players.Count</td>
+                    <td>
+                        <a asp-controller="PostMatch" asp-action="RawJson" asp-route-matchId="@match.MatchId" class="json-link">
+                            📋 View
+                        </a>
+                    </td>
                 </tr>
             }
         </tbody>

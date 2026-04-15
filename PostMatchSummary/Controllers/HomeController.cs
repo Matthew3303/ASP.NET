@@ -1,18 +1,23 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using PostMatchSummary.Models;
+using PostMatchSummary.Services;
 
 namespace PostMatchSummary.Controllers;
 
 public class HomeController : Controller
 {
-    public IActionResult Index()
+    private readonly MatchCacheService _cacheService;
+
+    public HomeController(MatchCacheService cacheService)
     {
-        return View();
+        _cacheService = cacheService;
     }
 
-    public IActionResult Privacy()
+    public IActionResult Index()
     {
+        // Proslijedi MatchCacheService u view kroz model ili ViewBag
+        ViewBag.MatchCache = _cacheService;
         return View();
     }
 

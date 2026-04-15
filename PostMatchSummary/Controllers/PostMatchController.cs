@@ -8,27 +8,42 @@ namespace PostMatchSummary.Controllers
     public class PostMatchController : Controller
     {
         private readonly RiotService _riotService;
+        private readonly MatchCacheService _cacheService;
 
-        public PostMatchController(RiotService riotService)
+        public PostMatchController(RiotService riotService, MatchCacheService cacheService)
         {
             _riotService = riotService;
+            _cacheService = cacheService;
         }
 
-        public async Task<IActionResult> Index(string matchId)
+        public IActionResult Index()
         {
-            var match = await _riotService.GetMatchAsync(matchId ?? "EUW1_7796654199");
+            // Lista svih matcheva
+            var matches = _cacheService.GetAll();
+            return View(matches);
+        }
+
+        public async Task<IActionResult> Details(string? matchId)
+        {
+            // Match ID je obavezan parametar
+            if (string.IsNullOrWhiteSpace(matchId))
+                return NotFound("Match ID je obavezan parametar");
+
+            // Prvo pokušaj dohvatiti iz cachea
+            var match = _cacheService.GetById(matchId);
+
+            // Ako nema u cacheu, dohvati iz API-a
+            if (match == null)
+            {
+                match = await _riotService.GetMatchAsync(matchId);
+                if (match != null)
+                {
+                    _cacheService.AddMatch(match);
+                }
+            }
 
             if (match == null)
-                return Content("Greška pri dohvaćanju matcha");
-
-            var summary = new MatchSummary
-            {
-                MatchId = match.MatchId,
-                WinnerTeamName = match.WinnerTeam?.TeamName ?? "Nepoznato",
-                TotalKills = match.TotalKills,
-                DurationMinutes = match.Duration / 60,
-                GameMode = match.GameMode
-            };
+                return NotFound($"Match '{matchId}' nije pronađen");
 
             var topKiller = match.Players.OrderByDescending(p => p.Kills).FirstOrDefault();
             var topCS = match.Players.OrderByDescending(p => p.CS).FirstOrDefault();
@@ -37,7 +52,6 @@ namespace PostMatchSummary.Controllers
                 .OrderByDescending(p => (double)(p.Kills + p.Assists) / p.Deaths)
                 .FirstOrDefault();
 
-            ViewBag.Summary = summary;
             ViewBag.TopKiller = topKiller;
             ViewBag.TopCS = topCS;
             ViewBag.BestKDA = bestKDA;
@@ -45,9 +59,13 @@ namespace PostMatchSummary.Controllers
             return View(match);
         }
 
-        public async Task<IActionResult> RawJson(string matchId)
+        public async Task<IActionResult> RawJson(string? matchId)
         {
-            var json = await _riotService.GetRawJsonAsync(matchId ?? "EUW1_7796654199");
+            // Match ID je obavezan parametar
+            if (string.IsNullOrWhiteSpace(matchId))
+                return NotFound("Match ID je obavezan parametar");
+
+            var json = await _riotService.GetRawJsonAsync(matchId);
 
             // Pretty print JSON
             var parsed = JsonSerializer.Deserialize<object>(json);
@@ -56,7 +74,7 @@ namespace PostMatchSummary.Controllers
                 WriteIndented = true
             });
 
-            ViewBag.MatchId = matchId ?? "EUW1_7796654199";
+            ViewBag.MatchId = matchId;
             return View("RawJson", prettyJson);
         }
     }

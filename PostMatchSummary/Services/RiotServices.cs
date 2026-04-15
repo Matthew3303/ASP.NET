@@ -6,7 +6,7 @@ namespace PostMatchSummary.Services
     public class RiotService
     {
         private readonly HttpClient _httpClient;
-        private string apiKey = "RGAPI-1e8c1ce6-3c59-4f6f-a086-dda3b60e09f1";
+        private string apiKey = "RGAPI-1b341de9-b8f2-4110-9366-7b33bfdd11b8";
 
         public RiotService(HttpClient httpClient)
         {
@@ -44,13 +44,17 @@ namespace PostMatchSummary.Services
 
         private Match MapToMatch(RiotResponse riotResponse)
         {
+            var utcDateTime = DateTimeOffset.FromUnixTimeMilliseconds(riotResponse.Info.GameCreation).DateTime;
+            var cetTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+            var cetDateTime = TimeZoneInfo.ConvertTime(utcDateTime, TimeZoneInfo.Utc, cetTimeZone);
+
             var match = new Match
             {
                 MatchId = riotResponse.Metadata.MatchId,
                 Duration = riotResponse.Info.GameDuration,
                 GameMode = riotResponse.Info.GameMode,
                 GameVersion = riotResponse.Info.GameVersion,
-                GameCreation = DateTimeOffset.FromUnixTimeMilliseconds(riotResponse.Info.GameCreation).DateTime
+                GameCreation = cetDateTime
             };
 
             var team100 = new Team { TeamId = 100 };
@@ -60,14 +64,7 @@ namespace PostMatchSummary.Services
             {
                 var champion = new Champion
                 {
-                    Name = p.ChampionName,
-                    Role = ParseRole(p.IndividualPosition),
-                    Kills = p.Kills,
-                    Deaths = p.Deaths,
-                    Assists = p.Assists,
-                    CS = p.TotalMinionsKilled + p.NeutralMinionsKilled,
-                    GoldEarned = p.GoldEarned,
-                    SummonerName = string.IsNullOrEmpty(p.RiotIdGameName) ? p.SummonerName : p.RiotIdGameName
+                    Name = p.ChampionName
                 };
 
                 var player = new Player
