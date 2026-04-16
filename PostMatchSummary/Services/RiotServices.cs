@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 using PostMatchSummary.Models;
 
 namespace PostMatchSummary.Services
@@ -6,19 +7,26 @@ namespace PostMatchSummary.Services
     public class RiotService
     {
         private readonly HttpClient _httpClient;
-        private string apiKey = "RGAPI-1b341de9-b8f2-4110-9366-7b33bfdd11b8";
+        private readonly IConfiguration _configuration;
+        private readonly string _apiKey;
+        private readonly string _baseUrl;
+        private readonly string _timeZone;
 
-        public RiotService(HttpClient httpClient)
+        public RiotService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
+            _configuration = configuration;
+            _apiKey = _configuration["RiotApi:ApiKey"] ?? throw new InvalidOperationException("RiotApi:ApiKey is missing");
+            _baseUrl = _configuration["RiotApi:BaseUrl"] ?? throw new InvalidOperationException("RiotApi:BaseUrl is missing");
+            _timeZone = _configuration["Application:TimeZone"] ?? "Central European Standard Time";
         }
 
         public async Task<Match?> GetMatchAsync(string matchId)
         {
             using var request = new HttpRequestMessage(HttpMethod.Get,
-                $"https://europe.api.riotgames.com/lol/match/v5/matches/{matchId}");
+                $"{_baseUrl}/{matchId}");
 
-            request.Headers.Add("X-Riot-Token", apiKey);
+            request.Headers.Add("X-Riot-Token", _apiKey);
 
             var response = await _httpClient.SendAsync(request);
             var json = await response.Content.ReadAsStringAsync();
@@ -34,9 +42,9 @@ namespace PostMatchSummary.Services
         public async Task<string> GetRawJsonAsync(string matchId)
         {
             using var request = new HttpRequestMessage(HttpMethod.Get,
-                $"https://europe.api.riotgames.com/lol/match/v5/matches/{matchId}");
+                $"{_baseUrl}/{matchId}");
 
-            request.Headers.Add("X-Riot-Token", apiKey);
+            request.Headers.Add("X-Riot-Token", _apiKey);
 
             var response = await _httpClient.SendAsync(request);
             return await response.Content.ReadAsStringAsync();
@@ -45,7 +53,7 @@ namespace PostMatchSummary.Services
         private Match MapToMatch(RiotResponse riotResponse)
         {
             var utcDateTime = DateTimeOffset.FromUnixTimeMilliseconds(riotResponse.Info.GameCreation).DateTime;
-            var cetTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+            var cetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(_timeZone);
             var cetDateTime = TimeZoneInfo.ConvertTime(utcDateTime, TimeZoneInfo.Utc, cetTimeZone);
 
             var match = new Match

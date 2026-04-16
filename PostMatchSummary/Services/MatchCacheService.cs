@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using PostMatchSummary.Models;
 
 namespace PostMatchSummary.Services
@@ -5,25 +6,18 @@ namespace PostMatchSummary.Services
     public class MatchCacheService
     {
         private readonly List<Match> _matches = new();
+        private readonly IConfiguration _configuration;
 
-        private static readonly string[] SeedMatchIds = new[]
+        public MatchCacheService(IConfiguration configuration)
         {
-            "EUW1_7820965651",
-            "EUW1_7820998761",
-            "EUW1_7821017464",
-            "EUW1_7819154218",
-            "EUW1_7815770415",
-            "EUW1_7819611122",
-            "EUW1_7813931253",
-            "EUW1_7795276686",
-            "EUW1_7822148529",
-            "EUW1_7822123915",
-            "EUW1_7822221536",
-        };
+            _configuration = configuration;
+        }
 
         public async Task InitializeAsync(RiotService riotService)
         {
-            foreach (var matchId in SeedMatchIds)
+            var seedMatchIds = _configuration.GetSection("Application:SeedMatchIds").Get<string[]>() ?? Array.Empty<string>();
+            
+            foreach (var matchId in seedMatchIds)
             {
                 try
                 {
