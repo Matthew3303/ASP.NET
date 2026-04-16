@@ -16,6 +16,9 @@ namespace PostMatchSummary.Services
             "EUW1_7819611122",
             "EUW1_7813931253",
             "EUW1_7795276686",
+            "EUW1_7822148529",
+            "EUW1_7822123915",
+            "EUW1_7822221536",
         };
 
         public async Task InitializeAsync(RiotService riotService)
