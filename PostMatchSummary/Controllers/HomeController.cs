@@ -14,16 +14,27 @@ public class HomeController : Controller
         _cacheService = cacheService;
     }
 
+    [Route("")]
+    [Route("home")]
+    [Route("home/index")]
     public IActionResult Index()
     {
-        // Proslijedi MatchCacheService u view kroz model ili ViewBag
         ViewBag.MatchCache = _cacheService;
         return View();
     }
 
+    [Route("home/error")]
+    [Route("error")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    [Route("about")]
+    public IActionResult About()
+    {
+        ViewBag.Title = "O Aplikaciji";
+        return View();
     }
 }

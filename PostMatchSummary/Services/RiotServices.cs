@@ -23,9 +23,7 @@ namespace PostMatchSummary.Services
 
         public async Task<Match?> GetMatchAsync(string matchId)
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get,
-                $"{_baseUrl}/{matchId}");
-
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/{matchId}");
             request.Headers.Add("X-Riot-Token", _apiKey);
 
             var response = await _httpClient.SendAsync(request);
@@ -35,15 +33,12 @@ namespace PostMatchSummary.Services
             var riotResponse = JsonSerializer.Deserialize<RiotResponse>(json, options);
 
             if (riotResponse == null) return null;
-
             return MapToMatch(riotResponse);
         }
 
         public async Task<string> GetRawJsonAsync(string matchId)
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get,
-                $"{_baseUrl}/{matchId}");
-
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/{matchId}");
             request.Headers.Add("X-Riot-Token", _apiKey);
 
             var response = await _httpClient.SendAsync(request);
@@ -70,11 +65,7 @@ namespace PostMatchSummary.Services
 
             foreach (var p in riotResponse.Info.Participants)
             {
-                var champion = new Champion
-                {
-                    Name = p.ChampionName
-                };
-
+                var champion = new Champion { Name = p.ChampionName };
                 var player = new Player
                 {
                     SummonerName = string.IsNullOrEmpty(p.RiotIdGameName) ? p.SummonerName : p.RiotIdGameName,
@@ -106,7 +97,6 @@ namespace PostMatchSummary.Services
 
             match.Teams.Add(team100);
             match.Teams.Add(team200);
-
             return match;
         }
 

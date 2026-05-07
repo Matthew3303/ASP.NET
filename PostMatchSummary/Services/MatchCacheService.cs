@@ -16,7 +16,7 @@ namespace PostMatchSummary.Services
         public async Task InitializeAsync(RiotService riotService)
         {
             var seedMatchIds = _configuration.GetSection("Application:SeedMatchIds").Get<string[]>() ?? Array.Empty<string>();
-            
+
             foreach (var matchId in seedMatchIds)
             {
                 try
@@ -39,11 +39,8 @@ namespace PostMatchSummary.Services
 
         public void AddMatch(Match match)
         {
-            // Provjeri je li match već u cacheu
             if (!_matches.Any(m => m.MatchId == match.MatchId))
-            {
                 _matches.Add(match);
-            }
         }
 
         public List<Player> GetAllPlayers() =>
