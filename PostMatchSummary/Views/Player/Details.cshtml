@@ -295,7 +295,7 @@
         <div class="card-header">
             <div>
                 <h1 class="summoner-name">@Model.SummonerName</h1>
-                <p class="card-subtitle">@Model.Champion.Name · @Model.Role</p>
+                <p class="card-subtitle">@await Html.PartialAsync("_ChampionBadge", Model.Champion) · @Model.Role</p>
             </div>
             <div>
                 <span class="@(Model.Win ? "win-badge" : "loss-badge")">
@@ -307,7 +307,7 @@
         <div class="champion-info">
             <div class="champion-icon">⚔️</div>
             <div class="champion-details">
-                <h3>@Model.Champion.Name</h3>
+                <h3>@await Html.PartialAsync("_ChampionBadge", Model.Champion)</h3>
                 <p>Role: <span class="role-badge">@Model.Role</span></p>
             </div>
         </div>
@@ -375,7 +375,7 @@
             </div>
             <div class="info-row">
                 <span class="info-label">Champion</span>
-                <span class="info-value">@Model.Champion.Name</span>
+                <span class="info-value">@await Html.PartialAsync("_ChampionBadge", Model.Champion)</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Role</span>

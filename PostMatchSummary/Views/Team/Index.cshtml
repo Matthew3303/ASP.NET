@@ -1,0 +1,273 @@
+@model List<PostMatchSummary.Models.Team>
+
+@{
+    ViewData["Title"] = "Teams Overview";
+}
+
+<style>
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 24px;
+        font-size: 14px;
+    }
+
+    .breadcrumb-nav a {
+        color: var(--accent-red);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .breadcrumb-nav a:hover { color: var(--text-primary); }
+    .breadcrumb-nav .sep { color: var(--text-muted); }
+    .breadcrumb-nav .current { color: var(--text-primary); font-weight: 500; }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .btn-primary {
+        padding: 10px 16px;
+        background: var(--accent-red);
+        color: var(--text-primary);
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary:hover {
+        background: #d43050;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(233, 69, 96, 0.3);
+    }
+
+    .search-container {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+
+    .search-container input {
+        flex: 1;
+        padding: 10px 12px;
+        background: var(--bg-elevated);
+        border: 2px solid var(--bg-surface);
+        color: var(--text-primary);
+        border-radius: 4px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+    .search-container input:focus {
+        outline: none;
+        border-color: var(--accent-red);
+        box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
+    }
+
+    .teams-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-surface);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .teams-table thead {
+        background: var(--bg-elevated);
+        border-bottom: 2px solid var(--accent-red);
+    }
+
+    .teams-table th {
+        padding: 16px 12px;
+        text-align: left;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .teams-table td {
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--bg-elevated);
+        color: var(--text-primary);
+    }
+
+    .teams-table tbody tr:hover {
+        background: var(--bg-elevated);
+        transition: all 0.2s ease;
+    }
+
+    .team-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .team-blue { background: rgba(15, 52, 96, 0.3); color: #00bfff; }
+    .team-red  { background: rgba(233, 69, 96, 0.3); color: var(--accent-red); }
+
+    .win-badge {
+        display: inline-block; padding: 4px 8px; border-radius: 4px;
+        font-size: 12px; font-weight: 600;
+        background: rgba(0, 184, 148, 0.15); color: var(--win);
+        border: 1px solid var(--win);
+    }
+
+    .loss-badge {
+        display: inline-block; padding: 4px 8px; border-radius: 4px;
+        font-size: 12px; font-weight: 600;
+        background: rgba(233, 69, 96, 0.15); color: var(--loss);
+        border: 1px solid var(--loss);
+    }
+
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .btn-secondary {
+        padding: 6px 12px;
+        background: var(--bg-surface);
+        color: var(--text-primary);
+        border: 1px solid var(--accent-red);
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .btn-secondary:hover { background: var(--accent-red); }
+    .btn-danger { border-color: var(--loss); }
+    .btn-danger:hover { background: var(--loss); }
+
+    .empty-message {
+        text-align: center;
+        padding: 48px 32px;
+        color: var(--text-muted);
+        font-size: 14px;
+        background: var(--bg-surface);
+        border-radius: 8px;
+    }
+</style>
+
+<nav class="breadcrumb-nav">
+    <a asp-controller="Home" asp-action="Index">🏠 Home</a>
+    <span class="sep">›</span>
+    <span class="current">🛡️ Teams</span>
+</nav>
+
+<div class="page-header">
+    <h1 class="page-title">🛡️ Teams</h1>
+    <a href="/api/teams/create" class="btn-primary">+ Add Team</a>
+</div>
+
+<div class="search-container">
+    <input type="text" id="searchBox" placeholder="Search teams..." autocomplete="off" />
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="empty-message">
+        <p>No registered teams.</p>
+    </div>
+}
+else
+{
+    <table class="teams-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Team</th>
+                <th>Status</th>
+                <th>Players</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="teamsTableBody">
+            @foreach (var team in Model)
+            {
+                <tr>
+                    <td>@team.Id</td>
+                    <td><span class="team-badge @(team.TeamId == 100 ? "team-blue" : "team-red")">@team.TeamName</span></td>
+                    <td><span class="@(team.Win ? "win-badge" : "loss-badge")">@(team.Win ? "✅ Victory" : "❌ Defeat")</span></td>
+                    <td>@team.Players.Count</td>
+                    <td class="actions">
+                        <a href="/api/teams/@team.Id/edit" class="btn-secondary">✏️ Edit</a>
+                        <a href="/api/teams/@team.Id/delete" class="btn-secondary btn-danger">🗑️ Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+    <script type="text/javascript">
+        $(function () {
+            var searchBox = $('#searchBox');
+            var teamsTableBody = $('#teamsTableBody');
+
+            searchBox.on('keyup', function () {
+                var query = $(this).val().trim();
+
+                if (query.length === 0) {
+                    location.reload();
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/teams/search',
+                    method: 'GET',
+                    data: { q: query },
+                    success: function (data) {
+                        teamsTableBody.empty();
+
+                        if (data.length === 0) {
+                            teamsTableBody.html('<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);">No results found</td></tr>');
+                            return;
+                        }
+
+                        $.each(data, function (i, team) {
+                            var row = '<tr>' +
+                                '<td>' + team.id + '</td>' +
+                                '<td><span class="team-badge ' + (team.name.includes('Blue') ? 'team-blue' : 'team-red') + '">' + team.name + '</span></td>' +
+                                '<td>-</td>' +
+                                '<td>-</td>' +
+                                '<td class="actions">' +
+                                '<a href="/api/teams/' + team.id + '/edit" class="btn-secondary">✏️ Edit</a>' +
+                                '<a href="/api/teams/' + team.id + '/delete" class="btn-secondary btn-danger">🗑️ Delete</a>' +
+                                '</td>' +
+                                '</tr>';
+                            teamsTableBody.append(row);
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

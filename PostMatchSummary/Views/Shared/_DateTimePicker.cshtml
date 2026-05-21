@@ -1,0 +1,209 @@
+@{
+    var fieldNameDate = ViewData["fieldNameDate"]?.ToString() ?? "DateTime";
+    var dateInputId = $"{fieldNameDate}_date";
+    var timeInputId = $"{fieldNameDate}_time";
+    var hiddenInputId = $"{fieldNameDate}_hidden";
+}
+
+<style>
+    .datetime-picker-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 4px;
+    }
+
+    .datetime-picker-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .datetime-picker-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .datetime-picker-input {
+        width: 100%;
+        padding: 10px 12px;
+        background: var(--bg-elevated);
+        border: 2px solid var(--bg-surface);
+        color: var(--text-primary);
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: 'Segoe UI', sans-serif;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .datetime-picker-input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.6;
+    }
+
+    .datetime-picker-input:focus {
+        outline: none;
+        border-color: var(--accent-red);
+        box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
+        background: var(--bg-elevated);
+        color: var(--text-primary);
+    }
+
+    .datetime-picker-input.valid {
+        border-color: var(--win);
+        box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.1);
+    }
+
+    .datetime-picker-input.invalid {
+        border-color: var(--loss);
+        box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
+    }
+
+    .datetime-picker-hint {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .datetime-picker-error {
+        font-size: 11px;
+        color: var(--loss);
+        margin-top: 4px;
+        display: none;
+    }
+
+    .datetime-picker-error.show {
+        display: block;
+    }
+
+    @@media (max-width: 576px) {
+        .datetime-picker-wrapper {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="datetime-picker-container" data-field-name="@fieldNameDate">
+    <div class="datetime-picker-wrapper">
+        <div class="datetime-picker-group">
+            <label for="@dateInputId" class="datetime-picker-label">Date</label>
+            <input
+                type="text"
+                id="@dateInputId"
+                name="@dateInputId"
+                class="datetime-picker-input datetime-date-input"
+                placeholder="01.01.2026"
+                data-field="@fieldNameDate"
+                autocomplete="off" maxlength="10" />
+            <span class="datetime-picker-hint">DD.MM.YYYY</span>
+            <div class="datetime-picker-error"></div>
+        </div>
+
+        <div class="datetime-picker-group">
+            <label for="@timeInputId" class="datetime-picker-label">Time</label>
+            <input
+                type="text"
+                id="@timeInputId"
+                name="@timeInputId"
+                class="datetime-picker-input datetime-time-input"
+                placeholder="14:30"
+                data-field="@fieldNameDate"
+                autocomplete="off" maxlength="5" />
+            <span class="datetime-picker-hint">HH:MM (24h)</span>
+            <div class="datetime-picker-error"></div>
+        </div>
+    </div>
+
+    <input
+        type="hidden"
+        id="@hiddenInputId"
+        name="@fieldNameDate"
+        class="datetime-picker-hidden-input" />
+</div>
+
+<script>
+$(function () {
+    var dateInput = $('#@dateInputId');
+    var timeInput = $('#@timeInputId');
+    var hiddenInput = $('#@hiddenInputId');
+
+    function formatDate(val) {
+        var d = val.replace(/\D/g, '');
+        if (d.length >= 5) return d.slice(0,2) + '.' + d.slice(2,4) + '.' + d.slice(4,8);
+        if (d.length >= 3) return d.slice(0,2) + '.' + d.slice(2,4);
+        if (d.length >= 2) return d.slice(0,2) + '.';
+        return d;
+    }
+
+    function formatTime(val) {
+        var d = val.replace(/\D/g, '');
+        if (d.length >= 3) return d.slice(0,2) + ':' + d.slice(2,4);
+        if (d.length >= 2) return d.slice(0,2) + ':';
+        return d;
+    }
+
+    function validateDate(val) {
+        return /^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$/.test(val);
+    }
+
+    function validateTime(val) {
+        return /^([01]\d|2[0-3]):[0-5]\d$/.test(val);
+    }
+
+    function updateHidden() {
+        var d = dateInput.val();
+        var t = timeInput.val();
+        if (d && t) hiddenInput.val(d + ' ' + t);
+        else if (d) hiddenInput.val(d + ' 00:00');
+        else hiddenInput.val('');
+    }
+
+    dateInput.on('input', function () {
+        var pos = this.selectionStart;
+        var formatted = formatDate($(this).val());
+        $(this).val(formatted);
+        var isValid = validateDate(formatted);
+        $(this).removeClass('valid invalid');
+        if (formatted.length >= 8) $(this).addClass(isValid ? 'valid' : 'invalid');
+        updateHidden();
+    });
+
+    timeInput.on('input', function () {
+        var formatted = formatTime($(this).val());
+        $(this).val(formatted);
+        var isValid = validateTime(formatted);
+        $(this).removeClass('valid invalid');
+        if (formatted.length >= 4) $(this).addClass(isValid ? 'valid' : 'invalid');
+        updateHidden();
+    });
+
+    dateInput.on('blur', function () {
+        var errorDiv = $(this).closest('.datetime-picker-group').find('.datetime-picker-error');
+        if ($(this).val() && !validateDate($(this).val())) {
+            errorDiv.text('Format: DD.MM.YYYY').addClass('show');
+        } else {
+            errorDiv.removeClass('show');
+        }
+    });
+
+    timeInput.on('blur', function () {
+        var errorDiv = $(this).closest('.datetime-picker-group').find('.datetime-picker-error');
+        if ($(this).val() && !validateTime($(this).val())) {
+            errorDiv.text('Format: HH:MM (24h)').addClass('show');
+        } else {
+            errorDiv.removeClass('show');
+        }
+    });
+
+    var existing = hiddenInput.val();
+    if (existing) {
+        var parts = existing.split(' ');
+        if (parts[0]) dateInput.val(parts[0]);
+        if (parts[1]) timeInput.val(parts[1]);
+    }
+});
+</script>

@@ -1,0 +1,188 @@
+@model PostMatchSummary.Models.Match
+
+@{
+    ViewData["Title"] = "Edit Match";
+    var supportedCultures = new[] { "hr", "en-US" };
+    var currentCulture = System.Globalization.CultureInfo.CurrentCulture.Name;
+    var dateFormat = currentCulture == "hr" ? "dd.MM.yyyy" : "MM/dd/yyyy";
+    var timeFormat = currentCulture == "hr" ? "HH:mm" : "hh:mm tt";
+}
+
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 24px auto;
+        padding: 24px;
+        background: var(--bg-surface);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 24px;
+        border-bottom: 2px solid var(--accent-blue);
+        padding-bottom: 12px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .form-label .required {
+        color: var(--loss);
+    }
+
+    .form-input, .form-select, .form-datetime {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+        border: 1px solid var(--bg-elevated);
+        border-radius: 4px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+
+    .form-input:focus, .form-select:focus, .form-datetime:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(100, 150, 255, 0.1);
+    }
+
+    .datetime-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .field-error {
+        color: var(--loss);
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    .form-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .btn-save, .btn-cancel, .btn-delete {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .btn-save {
+        background: var(--accent-blue);
+        color: white;
+    }
+
+    .btn-save:hover {
+        background: #4169c4;
+        transform: translateY(-2px);
+    }
+
+    .btn-cancel {
+        background: var(--bg-elevated);
+        color: var(--text-primary);
+        border: 1px solid var(--text-muted);
+    }
+
+    .btn-cancel:hover {
+        background: var(--bg-surface);
+    }
+
+    .btn-delete {
+        background: var(--loss);
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background: #d63650;
+        transform: translateY(-2px);
+    }
+
+    .validation-summary {
+        background: rgba(233, 69, 96, 0.1);
+        border: 1px solid var(--loss);
+        border-radius: 4px;
+        padding: 12px;
+        margin-bottom: 16px;
+        color: var(--loss);
+        font-size: 13px;
+    }
+</style>
+
+<div class="form-container">
+    <h1 class="form-title">✏️ Edit Match</h1>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="validation-summary">
+            ⚠️ Please fill in all fields correctly.
+        </div>
+    }
+
+    <form method="post" action="/api/postmatch/@Model.Id/edit">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label class="form-label">Match ID <span class="required">*</span></label>
+            <input type="text" class="form-input" asp-for="MatchId" required>
+            <span class="field-error">@Html.ValidationMessageFor(m => m.MatchId)</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Start Time <span class="required">*</span> (@dateFormat @timeFormat)</label>
+            @await Html.PartialAsync("_DateTimePicker", new { fieldNameDate = "GameCreation" })
+            <span class="field-error">@Html.ValidationMessageFor(m => m.GameCreation)</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Duration <span class="required">*</span></label>
+            <input type="number" class="form-input" asp-for="Duration" min="0" max="3600" required>
+            <span class="field-error">@Html.ValidationMessageFor(m => m.Duration)</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Game Mode <span class="required">*</span></label>
+            <input type="text" class="form-input" asp-for="GameMode" required>
+            <span class="field-error">@Html.ValidationMessageFor(m => m.GameMode)</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Game Version <span class="required">*</span></label>
+            <input type="text" class="form-input" asp-for="GameVersion" required>
+            <span class="field-error">@Html.ValidationMessageFor(m => m.GameVersion)</span>
+        </div>
+
+        <div class="form-buttons">
+            <button type="submit" class="btn-save">💾 Save Changes</button>
+            <a href="/api/postmatch/" class="btn-cancel">❌ Cancel</a>
+        </div>
+    </form>
+
+    <div style="margin-top: 32px; border-top: 1px solid var(--bg-elevated); padding-top: 24px;">
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">⚠️ Delete Zone:</p>
+        <a href="/api/postmatch/@Model.Id/delete" class="btn-delete" style="display: block;">🗑️ Delete Match</a>
+    </div>
+</div>

@@ -3,252 +3,414 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - PostMatchSummary</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] — PostMatchSummary</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
     <style>
+        /* ── GLOBAL DESIGN TOKENS ── */
         :root {
             --bg-primary: #0f0f1a;
             --bg-surface: #1a1a2e;
             --bg-elevated: #16213e;
             --accent-red: #e94560;
             --accent-blue: #0f3460;
+            --accent-purple: #533483;
+            --accent-gold: #ffd700;
             --text-primary: #e0e0e0;
             --text-muted: #8892a4;
             --win: #00b894;
             --loss: #e94560;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            height: 100%;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            min-width: 240px;
+            background: var(--bg-surface);
+            border-right: 1px solid rgba(255,255,255,0.06);
             display: flex;
             flex-direction: column;
-        }
-
-        header {
-            background: var(--bg-surface);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 16px 24px;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
             z-index: 100;
-        }
-
-        .header-content {
-            max-width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .brand {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--accent-red);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .brand:hover {
-            color: #ff6b7a;
-        }
-
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        main {
-            display: flex;
-            flex: 1;
             overflow-y: auto;
         }
 
-        aside {
-            width: 220px;
-            background: var(--bg-surface);
-            border-right: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 24px 0;
-            flex-shrink: 0;
+        .sidebar-logo {
+            padding: 24px 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
 
-        nav.sidebar-nav {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .nav-item {
-            display: flex;
-        }
-
-        .nav-link {
-            flex: 1;
-            padding: 12px 24px;
-            color: var(--text-muted);
+        .sidebar-logo a {
             text-decoration: none;
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent-red);
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 14px;
+            gap: 8px;
         }
 
-        .nav-link:hover {
-            color: var(--text-primary);
-            background: rgba(233, 69, 96, 0.05);
-        }
+        .sidebar-section { padding: 16px 0 8px; }
 
-        .nav-link.active {
-            color: var(--accent-red);
-            background: var(--bg-elevated);
-            border-left-color: var(--accent-red);
+        .sidebar-section-label {
+            padding: 0 20px 8px;
+            font-size: 10px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #4a5568;
         }
 
-        .content-wrapper {
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            transition: all 0.15s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-link:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.04);
+            border-left-color: rgba(233,69,96,0.4);
+        }
+
+        .sidebar-link.active {
+            color: var(--accent-red);
+            background: rgba(233,69,96,0.08);
+            border-left-color: var(--accent-red);
+        }
+
+        .sidebar-link .icon { font-size: 15px; width: 18px; text-align: center; }
+
+        .sidebar-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.05);
+            margin: 8px 20px;
+        }
+
+        .main-wrapper {
+            margin-left: 240px;
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            min-height: 100vh;
         }
 
         .main-content {
+            padding: 36px 40px;
             flex: 1;
-            padding: 32px;
-            overflow-y: auto;
-            max-width: 100%;
         }
 
-        footer {
-            background: var(--bg-surface);
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 24px;
-            text-align: center;
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: auto;
-        }
-
-        footer a {
-            color: var(--accent-red);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        footer a:hover {
-            color: var(--text-primary);
-        }
+        .mobile-toggle { display: none; }
 
         @@media (max-width: 768px) {
-            .mobile-menu-toggle {
-                display: block;
+            .sidebar {
+                width: 240px;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
             }
-
-            main {
-                flex-direction: column;
-            }
-
-            aside {
-                width: 100%;
-                max-height: 0;
-                overflow: hidden;
-                border-right: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-                padding: 0;
-                transition: max-height 0.3s ease;
-            }
-
-            aside.open {
-                max-height: 400px;
-                padding: 24px 0;
-            }
-
-            .main-content {
-                padding: 16px;
+            .sidebar.open { transform: translateX(0); }
+            .main-wrapper { margin-left: 0; }
+            .mobile-toggle {
+                display: flex;
+                position: fixed; top: 12px; left: 12px; z-index: 200;
+                background: var(--accent-red); border: none; border-radius: 4px;
+                padding: 8px 10px; cursor: pointer; color: white; font-size: 18px;
             }
         }
+
+        .champion-badge-with-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        }
+
+        .champion-badge-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 5px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: #0f0f1a;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
+        .champion-badge-name {
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1;
+        }
+
+        /* ── SHARED COMPONENT STYLES ── */
+
+        .breadcrumb { margin-bottom: 32px; font-size: 14px; padding: 0; background: none; }
+        .breadcrumb-item a { color: var(--accent-red); text-decoration: none; }
+        .breadcrumb-item a:hover { text-decoration: underline; }
+        .breadcrumb-item.active { color: var(--text-muted); }
+        .breadcrumb-item + .breadcrumb-item::before { color: var(--text-muted); }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .btn-primary {
+            padding: 10px 16px;
+            background: var(--accent-red);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover {
+            background: #d43050;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(233,69,96,0.3);
+            color: var(--text-primary);
+        }
+        .btn-secondary {
+            padding: 6px 12px;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            border: 1px solid var(--accent-red);
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-secondary:hover { background: var(--accent-red); color: var(--text-primary); }
+        .btn-danger { border-color: var(--loss); }
+        .btn-danger:hover { background: var(--loss); }
+
+        .search-container { display: flex; gap: 8px; margin-bottom: 24px; }
+        .search-container input, .filter-input {
+            flex: 1;
+            padding: 10px 12px;
+            background: var(--bg-elevated);
+            border: 2px solid var(--bg-surface);
+            color: var(--text-primary);
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .search-container input:focus, .filter-input:focus {
+            outline: none;
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-surface);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .data-table thead {
+            background: var(--bg-elevated);
+            border-bottom: 2px solid var(--accent-red);
+        }
+        .data-table th {
+            padding: 16px 12px;
+            text-align: left;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .data-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--bg-elevated);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        .data-table tbody tr:hover { background: var(--bg-elevated); }
+        .data-table .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .badge-blue {
+            display: inline-block; padding: 4px 8px; border-radius: 4px;
+            font-size: 12px; font-weight: 600;
+            background: rgba(15,52,96,0.3); color: #00bfff;
+        }
+        .badge-red {
+            display: inline-block; padding: 4px 8px; border-radius: 4px;
+            font-size: 12px; font-weight: 600;
+            background: rgba(233,69,96,0.3); color: var(--accent-red);
+        }
+        .badge-win {
+            display: inline-block; padding: 4px 8px; border-radius: 4px;
+            font-size: 12px; font-weight: 600;
+            background: rgba(0,184,148,0.2); color: var(--win);
+            border: 1px solid rgba(0,184,148,0.3);
+        }
+        .badge-loss {
+            display: inline-block; padding: 4px 8px; border-radius: 4px;
+            font-size: 12px; font-weight: 600;
+            background: rgba(233,69,96,0.2); color: var(--loss);
+            border: 1px solid rgba(233,69,96,0.3);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-title::before {
+            content: '';
+            width: 3px; height: 20px;
+            background: var(--accent-red);
+            border-radius: 2px;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 48px 32px;
+            color: var(--text-muted);
+            font-size: 14px;
+            background: var(--bg-surface);
+            border-radius: 8px;
+        }
     </style>
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/PostMatchSummary.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <div class="header-content">
-            <a asp-controller="Home" asp-action="Index" class="brand">🎮 League Post Match Summary</a>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
-        </div>
-    </header>
 
-    <main>
-        <aside id="sidebar" class="sidebar">
-            <nav class="sidebar-nav">
-                <div class="nav-item">
-                    <a asp-controller="Home" asp-action="Index" 
-                       class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
-                        🏠 Home
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a asp-controller="PostMatch" asp-action="Index" 
-                       class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "PostMatch" && (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Details") ? "active" : "")">
-                        🎯 Matches
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a asp-controller="Player" asp-action="Index" 
-                       class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Player" ? "active" : "")">
-                        👥 Players
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a asp-controller="Home" asp-action="About" 
-                       class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "About" ? "active" : "")">
-                        ℹ️ About
-                    </a>
-                </div>
-            </nav>
-        </aside>
+@{
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
 
-        <div class="content-wrapper">
-            <div class="main-content">
-                @RenderBody()
-            </div>
-            <footer>
-                &copy; 2026 - PostMatchSummary
-            </footer>
-        </div>
+    string Nav(string c, string a) =>
+        ctrl == c && action == a ? "sidebar-link active" : "sidebar-link";
+}
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<nav class="sidebar">
+    <div class="sidebar-logo">
+        <a href="/">⚔️ PostMatch<span style="color:#e0e0e0">Summary</span></a>
+    </div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-label">Overview</div>
+        <a href="/" class="@Nav("Home", "Index")">
+            <span class="icon">🏠</span> Dashboard
+        </a>
+        <a href="/api/players/search-riot" class="@Nav("Player", "SearchRiot")">
+            <span class="icon">🔍</span> Search Player
+        </a>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-label">Matches</div>
+        <a href="/api/matches" class="@Nav("PostMatch", "Index")">
+            <span class="icon">📊</span> All Matches
+        </a>
+        <a href="/api/matches/create" class="@Nav("PostMatch", "Create")">
+            <span class="icon">➕</span> Add Match
+        </a>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-label">Champions</div>
+        <a href="/api/champions" class="@Nav("Champion", "Index")">
+            <span class="icon">🏆</span> All Champions
+        </a>
+        <a href="/api/champions/from-games" class="@Nav("Champion", "FromGames")">
+            <span class="icon">👾</span> Champions from Games
+        </a>
+        <a href="/api/champions/create" class="@Nav("Champion", "Create")">
+            <span class="icon">➕</span> Add Champion
+        </a>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-label">Players</div>
+        <a href="/api/players" class="@Nav("Player", "Index")">
+            <span class="icon">👥</span> All Players
+        </a>
+        <a href="/api/players/create" class="@Nav("Player", "Create")">
+            <span class="icon">➕</span> Add Player
+        </a>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-label">Teams</div>
+        <a href="/api/teams" class="@Nav("Team", "Index")">
+            <span class="icon">🛡️</span> All Teams
+        </a>
+        <a href="/api/teams/create" class="@Nav("Team", "Create")">
+            <span class="icon">➕</span> Add Team
+        </a>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+        <a href="/about" class="@Nav("Home", "About")">
+            <span class="icon">ℹ️</span> About
+        </a>
+    </div>
+</nav>
+
+<div class="main-wrapper">
+    <main class="main-content">
+        @RenderBody()
     </main>
+</div>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script>
-        document.getElementById('mobileMenuToggle').addEventListener('click', function () {
-            document.getElementById('sidebar').classList.toggle('open');
-        });
-
-        // Close sidebar when a nav link is clicked on mobile
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function () {
-                const sidebar = document.getElementById('sidebar');
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.remove('open');
-                }
-            });
-        });
-    </script>
-    @await RenderSectionAsync("Scripts", required: false)
+@RenderSection("Scripts", required: false)
 </body>
 </html>

@@ -40,6 +40,9 @@ namespace PostMatchSummary.Models
         [JsonPropertyName("riotIdGameName")]
         public string RiotIdGameName { get; set; } = string.Empty;
 
+        [JsonPropertyName("riotIdTagLine")]
+        public string RiotIdTagLine { get; set; } = string.Empty;
+
         [JsonPropertyName("summonerName")]
         public string SummonerName { get; set; } = string.Empty;
 

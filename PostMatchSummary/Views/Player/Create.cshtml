@@ -1,0 +1,328 @@
+@model PostMatchSummary.Models.Player
+
+@{
+    ViewData["Title"] = "Add Player";
+    var roles = (List<PostMatchSummary.Models.ChampionRole>?)ViewBag.Roles ?? new();
+    var champions = (List<PostMatchSummary.Models.Champion>?)ViewBag.Champions ?? new();
+    var matches = (List<PostMatchSummary.Models.Match>?)ViewBag.Matches ?? new();
+}
+
+<style>
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 24px;
+        font-size: 14px;
+    }
+    .breadcrumb-nav a { color: #e94560; text-decoration: none; }
+    .breadcrumb-nav a:hover { color: #e0e0e0; }
+    .breadcrumb-nav .sep { color: #8892a4; }
+    .breadcrumb-nav .current { color: #e0e0e0; font-weight: 500; }
+
+    .form-container {
+        max-width: 700px;
+        background: #1a1a2e;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 8px;
+        padding: 32px;
+    }
+
+    .form-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #e0e0e0;
+        margin-bottom: 28px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .form-row.full { grid-template-columns: 1fr; }
+    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .form-group { margin-bottom: 20px; }
+
+    .form-label {
+        display: block;
+        font-size: 11px;
+        color: #8892a4;
+        margin-bottom: 6px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 10px 12px;
+        background: #16213e;
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #e0e0e0;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #e94560;
+        box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
+    }
+
+    .form-control::placeholder { color: #4a5568; }
+    .form-select option { background: #16213e; color: #e0e0e0; }
+
+    .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: #16213e;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: #00b894;
+    }
+
+    .checkbox-row label {
+        color: #e0e0e0;
+        font-size: 14px;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .validation-errors {
+        background: rgba(233,69,96,0.1);
+        border: 1px solid #e94560;
+        border-radius: 4px;
+        padding: 12px 16px;
+        margin-bottom: 24px;
+        color: #e94560;
+        font-size: 13px;
+    }
+
+    .validation-errors ul { margin: 6px 0 0 0; padding-left: 18px; }
+    .field-error { color: #e94560; font-size: 12px; margin-top: 4px; display: block; }
+
+    .form-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .btn-submit {
+        flex: 1;
+        padding: 12px;
+        background: #e94560;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-submit:hover { background: #ff6b7a; transform: translateY(-1px); }
+
+    .btn-cancel {
+        flex: 1;
+        padding: 12px;
+        background: #16213e;
+        color: #e0e0e0;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel:hover { background: rgba(255,255,255,0.06); color: #e0e0e0; }
+
+    .optional-tag {
+        color: #4a5568;
+        font-size: 10px;
+        font-weight: 400;
+        margin-left: 4px;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+</style>
+
+<nav class="breadcrumb-nav">
+    <a asp-controller="Home" asp-action="Index">🏠 Home</a>
+    <span class="sep">›</span>
+    <a asp-controller="Player" asp-action="Index">👥 Players</a>
+    <span class="sep">›</span>
+    <span class="current">Add Player</span>
+</nav>
+
+<div class="form-container">
+    <h1 class="form-title">➕ Add Player</h1>
+
+    @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+    {
+        <div class="validation-errors">
+            <strong>Please fix the following errors:</strong>
+            <ul>
+                @foreach (var modelState in ViewData.ModelState.Values)
+                {
+                    @foreach (var error in modelState.Errors)
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                }
+            </ul>
+        </div>
+    }
+
+    <form method="post" asp-controller="Player" asp-action="Create">
+        @Html.AntiForgeryToken()
+
+        <div class="form-row full">
+            <div class="form-group">
+                <label for="SummonerName" class="form-label">Summoner Name</label>
+                <input type="text" id="SummonerName" name="SummonerName"
+                       class="form-control" value="@Model?.SummonerName"
+                       placeholder="e.g. Faker" required />
+                <span class="field-error">@Html.ValidationMessage("SummonerName")</span>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="ChampionId_display" class="form-label">Champion</label>
+                @{
+                    var acChampion = new ViewDataDictionary(ViewData)
+                    {
+                        ["fieldName"] = "ChampionId",
+                        ["endpoint"] = "/api/champions/search",
+                        ["displayField"] = "name",
+                        ["selectedId"] = Model?.ChampionId ?? 0,
+                        ["selectedLabel"] = champions.FirstOrDefault(c => c.Id == Model?.ChampionId)?.Name ?? string.Empty
+                    };
+                }
+                @await Html.PartialAsync("_AutocompleteDropdown", new object(), acChampion)
+                <span class="field-error">@Html.ValidationMessage("ChampionId")</span>
+            </div>
+
+            <div class="form-group">
+                <label for="Role" class="form-label">Role</label>
+                <select id="Role" name="Role" class="form-select" required>
+                    <option value="">— Select Role —</option>
+                    @foreach (var role in roles)
+                    {
+                        if (Model?.Role == role)
+                        {
+                            <option value="@((int)role)" selected>@role</option>
+                        }
+                        else
+                        {
+                            <option value="@((int)role)">@role</option>
+                        }
+                    }
+                </select>
+                <span class="field-error">@Html.ValidationMessage("Role")</span>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="GameMode" class="form-label">Game Mode</label>
+                <select id="GameMode" name="GameMode" class="form-select" required>
+                    <option value="">— Select Game Mode —</option>
+                    <option value="Classic">Classic</option>
+                    <option value="ARAM">ARAM</option>
+                    <option value="Rotating Game Mode">Rotating Game Mode</option>
+                </select>
+                <span class="field-error">@Html.ValidationMessage("GameMode")</span>
+            </div>
+        </div>
+
+        <div class="form-row three">
+            <div class="form-group">
+                <label for="Kills" class="form-label">Kills</label>
+                <input type="number" id="Kills" name="Kills" class="form-control"
+                       value="@(Model?.Kills ?? 0)" min="0" max="100" />
+            </div>
+            <div class="form-group">
+                <label for="Deaths" class="form-label">Deaths</label>
+                <input type="number" id="Deaths" name="Deaths" class="form-control"
+                       value="@(Model?.Deaths ?? 0)" min="0" max="100" />
+            </div>
+            <div class="form-group">
+                <label for="Assists" class="form-label">Assists</label>
+                <input type="number" id="Assists" name="Assists" class="form-control"
+                       value="@(Model?.Assists ?? 0)" min="0" max="100" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="CS" class="form-label">CS</label>
+                <input type="number" id="CS" name="CS" class="form-control"
+                       value="@(Model?.CS ?? 0)" min="0" max="1000" />
+            </div>
+            <div class="form-group">
+                <label for="GoldEarned" class="form-label">Gold Earned</label>
+                <input type="number" id="GoldEarned" name="GoldEarned" class="form-control"
+                       value="@(Model?.GoldEarned ?? 0)" min="0" max="100000" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="MatchId" class="form-label">Match <span class="optional-tag">(optional)</span></label>
+                <select id="MatchId" name="MatchId" class="form-select">
+                    <option value="">— No Match —</option>
+                    @foreach (var match in matches)
+                    {
+                        if (Model?.MatchId == match.Id)
+                        {
+                            <option value="@match.Id" selected>@match.MatchId — @match.GameCreation.ToString("d.M.yyyy")</option>
+                        }
+                        else
+                        {
+                            <option value="@match.Id">@match.MatchId — @match.GameCreation.ToString("d.M.yyyy")</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Result</label>
+                <div class="checkbox-row">
+                    <input type="hidden" name="Win" value="false" />
+                    @if (Model?.Win == true)
+                    {
+                        <input type="checkbox" id="Win" name="Win" value="true" checked />
+                    }
+                    else
+                    {
+                        <input type="checkbox" id="Win" name="Win" value="true" />
+                    }
+                    <label for="Win">Win</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-buttons">
+            <button type="submit" class="btn-submit">💾 Save Player</button>
+            <a asp-controller="Player" asp-action="Index" class="btn-cancel">❌ Cancel</a>
+        </div>
+    </form>
+</div>

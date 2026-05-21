@@ -1,0 +1,194 @@
+@model PostMatchSummary.Models.Match
+
+@{
+    ViewData["Title"] = "Add Match";
+}
+
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 24px;
+        background: var(--bg-surface);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .form-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-label .required { color: var(--accent-red); }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        background: var(--bg-elevated);
+        border: 2px solid var(--bg-surface);
+        color: var(--text-primary);
+        border-radius: 4px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-red);
+        box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
+        background: var(--bg-elevated);
+        color: var(--text-primary);
+    }
+
+    .form-control option {
+        background: var(--bg-elevated);
+        color: var(--text-primary);
+    }
+
+    .field-error {
+        color: var(--accent-red);
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .validation-summary {
+        background: rgba(233,69,96,0.1);
+        border: 1px solid rgba(233,69,96,0.3);
+        border-radius: 4px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        color: var(--accent-red);
+        font-size: 13px;
+    }
+
+    .form-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+    }
+
+    .btn-submit {
+        flex: 1;
+        padding: 12px 16px;
+        background: var(--accent-red);
+        color: var(--text-primary);
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-submit:hover {
+        background: #d43050;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(233,69,96,0.3);
+    }
+
+    .btn-cancel {
+        flex: 1;
+        padding: 12px 16px;
+        background: var(--bg-elevated);
+        color: var(--text-primary);
+        border: 1px solid var(--accent-red);
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .btn-cancel:hover {
+        background: var(--accent-red);
+        color: var(--text-primary);
+    }
+</style>
+
+<div class="form-container">
+    <h1 class="form-title">➕ Add Match</h1>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="validation-summary">
+            ⚠️ Please fill in all required fields correctly.
+        </div>
+    }
+
+    <form method="post" asp-controller="PostMatch" asp-action="Create">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label class="form-label">Match ID <span class="required">*</span></label>
+            <input type="text" class="form-control" asp-for="MatchId" placeholder="e.g., match_12345" required />
+            <span class="field-error">@Html.ValidationMessageFor(m => m.MatchId)</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Game Start Time <span class="required">*</span> (DD.MM.YYYY HH:mm)</label>
+            @await Html.PartialAsync("_DateTimePicker", new { fieldNameDate = "GameCreation" })
+            <span class="field-error">@Html.ValidationMessageFor(m => m.GameCreation)</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Duration <span class="required">*</span></label>
+            <select class="form-control" asp-for="Duration" required>
+                <option value="">— Select duration —</option>
+                <option value="60">1 minute</option>
+                <option value="120">2 minutes</option>
+                <option value="300">5 minutes</option>
+                <option value="600">10 minutes</option>
+                <option value="900">15 minutes</option>
+                <option value="1200">20 minutes</option>
+                <option value="1500">25 minutes</option>
+                <option value="1800">30 minutes</option>
+                <option value="2100">35 minutes</option>
+                <option value="2400">40 minutes</option>
+                <option value="2700">45 minutes</option>
+                <option value="3000">50 minutes</option>
+                <option value="3300">55 minutes</option>
+                <option value="3600">60 minutes</option>
+                <option value="5400">90 minutes</option>
+                <option value="7200">120 minutes (2 hours)</option>
+            </select>
+            <span class="field-error">@Html.ValidationMessageFor(m => m.Duration)</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Game Mode <span class="required">*</span></label>
+            <input type="text" class="form-control" asp-for="GameMode" placeholder="e.g., CLASSIC" required />
+            <span class="field-error">@Html.ValidationMessageFor(m => m.GameMode)</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Game Version <span class="required">*</span></label>
+            <input type="text" class="form-control" asp-for="GameVersion" placeholder="e.g., 13.1.1" required />
+            <span class="field-error">@Html.ValidationMessageFor(m => m.GameVersion)</span>
+        </div>
+
+        <div class="form-buttons">
+            <button type="submit" class="btn-submit">💾 Save Match</button>
+            <a href="/api/matches" class="btn-cancel">❌ Cancel</a>
+        </div>
+    </form>
+</div>

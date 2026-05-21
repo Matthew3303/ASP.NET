@@ -1,0 +1,109 @@
+@model PostMatchSummary.Models.Team
+
+@{
+    ViewData["Title"] = "Delete Team";
+}
+
+<style>
+    .delete-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 24px;
+        background: rgba(233, 69, 96, 0.1);
+        border: 2px solid var(--loss);
+        border-radius: 8px;
+    }
+
+    .delete-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--loss);
+        margin-bottom: 16px;
+    }
+
+    .delete-info {
+        background: var(--bg-surface);
+        padding: 16px;
+        border-radius: 4px;
+        margin: 16px 0;
+        color: var(--text-primary);
+    }
+
+    .warning-box {
+        background: rgba(233, 69, 96, 0.1);
+        border-left: 4px solid var(--loss);
+        padding: 12px;
+        margin: 16px 0;
+        color: var(--loss);
+        font-size: 14px;
+    }
+
+    .form-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .btn-danger, .btn-cancel {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .btn-danger {
+        background: var(--loss);
+        color: var(--text-primary);
+    }
+
+    .btn-danger:hover {
+        background: #d63650;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(233, 69, 96, 0.3);
+    }
+
+    .btn-cancel {
+        background: var(--bg-elevated);
+        color: var(--text-primary);
+        border: 1px solid var(--text-muted);
+    }
+
+    .btn-cancel:hover {
+        background: var(--bg-surface);
+        border-color: var(--accent-red);
+    }
+</style>
+
+<div class="delete-container">
+    <h1 class="delete-title">⚠️ Delete Team</h1>
+
+    <div class="delete-info">
+        <strong>@Model.TeamName</strong> (@(Model.Win ? "Victory" : "Defeat"))
+    </div>
+
+    @if (Model.Players.Count > 0)
+    {
+        <div class="warning-box">
+            <strong>⚠️ Warning:</strong> The team contains @Model.Players.Count player(s). Deletion is not possible.
+        </div>
+        <div class="form-buttons">
+            <a href="/api/teams/" class="btn-cancel">← Back</a>
+        </div>
+    }
+    else
+    {
+        <div class="warning-box">
+            Deletion is permanent and cannot be undone.
+        </div>
+        <form method="post" action="/api/teams/@Model.Id/delete" style="display: flex; gap: 12px;">
+            <button type="submit" class="btn-danger" style="flex: 1;">🗑️ Confirm Deletion</button>
+            <a href="/api/teams/" class="btn-cancel" style="flex: 1;">❌ Cancel</a>
+        </form>
+    }
+</div>

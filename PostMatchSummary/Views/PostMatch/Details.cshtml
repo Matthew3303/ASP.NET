@@ -349,6 +349,13 @@
     <span class="current">Match Details</span>
 </nav>
 
+@if (ViewBag.IsPreview == true)
+{
+    <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(233,69,96,0.1); border:1px solid rgba(233,69,96,0.3); color:#e94560; font-size:12px; padding:8px 14px; border-radius:4px; margin-bottom:20px;">
+        👁️ Preview mode
+    </div>
+}
+
 <div class="match-header">
     <h1>⚔️ Match @Model.MatchId</h1>
 
@@ -454,12 +461,10 @@
                     {
                         <tr>
                             <td class="player-name">
-                                <a asp-controller="Player" asp-action="Details" asp-route-name="@p.SummonerName">
-                                    @p.SummonerName
-                                </a>
+                                <a href="/api/players/@p.Id/match/@Model.Id">@p.SummonerName</a>
                             </td>
                             <td>
-                                <span class="champion-badge">@p.Champion.Name</span>
+                                <span class="champion-badge">@await Html.PartialAsync("_ChampionBadge", p.Champion)</span>
                             </td>
                             <td>
                                 <span class="role-badge">@p.Role</span>

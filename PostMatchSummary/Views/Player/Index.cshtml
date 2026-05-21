@@ -1,4 +1,4 @@
-@model List<(PostMatchSummary.Models.Player, PostMatchSummary.Models.Match)>
+@model List<PostMatchSummary.Models.Player>
 
 @{
     ViewData["Title"] = "Players";
@@ -31,21 +31,17 @@
         transition: color 0.2s;
     }
 
-    .breadcrumb-nav a:hover {
-        color: var(--text-primary);
-    }
-
-    .breadcrumb-nav .sep {
-        color: var(--text-muted);
-    }
-
-    .breadcrumb-nav .current {
-        color: var(--text-primary);
-        font-weight: 500;
-    }
+    .breadcrumb-nav a:hover { color: var(--text-primary); }
+    .breadcrumb-nav .sep { color: var(--text-muted); }
+    .breadcrumb-nav .current { color: var(--text-primary); font-weight: 500; }
 
     .page-header {
-        margin-bottom: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
     }
 
     .page-header h1 {
@@ -61,18 +57,74 @@
         font-size: 14px;
     }
 
+    .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: var(--accent-red);
+        color: white;
+    }
+
+    .btn-primary:hover { background: #ff6b7a; color: white; }
+
+    .btn-secondary {
+        background: var(--bg-elevated);
+        color: var(--text-primary);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .btn-secondary:hover { background: rgba(255,255,255,0.06); }
+
+    .search-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .search-bar input {
+        flex: 1;
+        background: var(--bg-surface);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 4px;
+        padding: 8px 14px;
+        color: var(--text-primary);
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .search-bar input:focus { border-color: var(--accent-red); }
+    .search-bar input::placeholder { color: var(--text-muted); }
+
     .players-table {
         width: 100%;
         border-collapse: collapse;
         background: var(--bg-surface);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255,255,255,0.06);
         border-radius: 6px;
         overflow: hidden;
     }
 
     .players-table thead {
         background: var(--bg-elevated);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid rgba(255,255,255,0.06);
     }
 
     .players-table thead th {
@@ -86,34 +138,19 @@
     }
 
     .players-table tbody tr {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        border-bottom: 1px solid rgba(255,255,255,0.03);
         transition: background 0.2s;
     }
 
-    .players-table tbody tr:nth-child(odd) {
-        background: var(--bg-primary);
-    }
-
-    .players-table tbody tr:nth-child(even) {
-        background: var(--bg-surface);
-    }
-
-    .players-table tbody tr:hover {
-        background: rgba(233, 69, 96, 0.08);
-    }
-
-    .players-table tbody tr:last-child {
-        border-bottom: none;
-    }
+    .players-table tbody tr:nth-child(odd) { background: var(--bg-primary); }
+    .players-table tbody tr:nth-child(even) { background: var(--bg-surface); }
+    .players-table tbody tr:hover { background: rgba(233, 69, 96, 0.08); }
+    .players-table tbody tr:last-child { border-bottom: none; }
 
     .players-table td {
         padding: 12px 16px;
         color: var(--text-primary);
         font-size: 14px;
-    }
-
-    .player-name-cell {
-        cursor: pointer;
     }
 
     .player-name {
@@ -123,14 +160,9 @@
         transition: color 0.2s;
     }
 
-    .player-name:hover {
-        color: #ff6b7a;
-    }
+    .player-name:hover { color: #ff6b7a; }
 
-    .champion-name {
-        color: var(--accent-blue);
-        font-weight: 500;
-    }
+    .champion-name { color: #a8d8ea; font-weight: 500; }
 
     .role-badge {
         display: inline-block;
@@ -148,24 +180,13 @@
         gap: 4px;
     }
 
-    .kda .kills {
-        color: var(--win);
-        font-weight: 600;
-    }
-
-    .kda .deaths {
-        color: var(--loss);
-        font-weight: 600;
-    }
-
-    .kda .assists {
-        color: var(--text-muted);
-    }
+    .kda .kills { color: var(--win); font-weight: 600; }
+    .kda .deaths { color: var(--loss); font-weight: 600; }
+    .kda .assists { color: var(--text-muted); }
 
     .stat-value {
         font-family: 'Consolas', 'Courier New', monospace;
         font-weight: 500;
-        color: var(--text-primary);
     }
 
     .team-badge {
@@ -179,39 +200,40 @@
     }
 
     .win-badge {
-        background: rgba(0, 184, 148, 0.15);
+        background: rgba(0,184,148,0.15);
         color: var(--win);
         border: 1px solid var(--win);
     }
 
     .loss-badge {
-        background: rgba(233, 69, 96, 0.15);
+        background: rgba(233,69,96,0.15);
         color: var(--loss);
         border: 1px solid var(--loss);
     }
 
+    .action-links { display: flex; gap: 10px; }
+
+    .action-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 12px;
+        transition: color 0.2s;
+    }
+
+    .action-link:hover { color: var(--text-primary); }
+    .action-link.delete:hover { color: var(--loss); }
+
     .no-players {
         text-align: center;
-        padding: 40px;
+        padding: 60px 40px;
         color: var(--text-muted);
     }
 
-    .no-players p {
-        margin: 0;
-        font-size: 16px;
-    }
+    .no-players p { margin: 0 0 16px 0; font-size: 16px; }
 
-    /* Game Date Column Styling */
-    .players-table th:first-child,
-    .players-table td:first-child {
-        min-width: 150px;
-        width: 150px;
-    }
-
-    .players-table td:first-child .stat-value {
-        font-weight: 700;
-        color: var(--text-primary);
-        display: block;
+    .match-date {
+        color: var(--text-muted);
+        font-size: 12px;
     }
 </style>
 
@@ -222,14 +244,41 @@
 </nav>
 
 <div class="page-header">
-    <h1>👥 Players</h1>
-    <p>@Model.Count player appearance@(Model.Count != 1 ? "s" : "") across all games</p>
+    <div>
+        <h1>👥 Players</h1>
+        <p>@Model.Count player@(Model.Count != 1 ? "s" : "") in database</p>
+    </div>
+    <div class="header-actions">
+        <a asp-controller="Player" asp-action="SearchRiot" class="btn btn-secondary">🔍 Search by Riot ID</a>
+        <a asp-controller="Player" asp-action="Create" class="btn btn-primary">+ Add Player</a>
+    </div>
 </div>
+
+<form method="get" class="search-bar">
+    <input type="text" id="filterInput" placeholder="Filter players by name..." autocomplete="off" />
+</form>
+
+<script>
+document.getElementById('filterInput').addEventListener('keyup', function(e) {
+    const filterValue = e.target.value.toLowerCase();
+    const tableRows = document.querySelectorAll('.players-table tbody tr');
+    
+    tableRows.forEach(row => {
+        const nameCell = row.querySelector('td:first-child').textContent.toLowerCase();
+        if (nameCell.includes(filterValue)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+</script>
 
 @if (Model.Count == 0)
 {
     <div class="no-players">
-        <p>No players found in cache. Load a match first.</p>
+        <p>No players found.</p>
+        <a asp-controller="Player" asp-action="SearchRiot" class="btn btn-primary">🔍 Search Riot ID</a>
     </div>
 }
 else
@@ -237,7 +286,6 @@ else
     <table class="players-table">
         <thead>
             <tr>
-                <th>Game Date</th>
                 <th>Summoner Name</th>
                 <th>Champion</th>
                 <th>Role</th>
@@ -246,22 +294,31 @@ else
                 <th>Gold</th>
                 <th>Team</th>
                 <th>Result</th>
+                <th>Match Date</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var (player, match) in Model)
+            @foreach (var player in Model)
             {
                 <tr>
                     <td>
-                        <span class="stat-value">@match.GameCreation.ToString("d.M.yyyy")</span>
-                    </td>
-                    <td class="player-name-cell">
-                        <a asp-controller="Player" asp-action="Details" asp-route-name="@player.SummonerName" class="player-name">
-                            @player.SummonerName
-                        </a>
+                        @if (!string.IsNullOrEmpty(player.RiotId))
+                        {
+                            <a href="@($"/api/players/preview?riotId={Uri.EscapeDataString(player.RiotId)}")" class="player-name">
+                                @player.SummonerName
+                            </a>
+                            <br /><small style="color: var(--text-muted);">@player.RiotId</small>
+                        }
+                        else
+                        {
+                            <a asp-controller="Player" asp-action="Details" asp-route-id="@player.Id" class="player-name">
+                                @player.SummonerName
+                            </a>
+                        }
                     </td>
                     <td>
-                        <span class="champion-name">@player.Champion.Name</span>
+                        <span class="champion-name">@(player.Champion?.Name ?? "—")</span>
                     </td>
                     <td>
                         <span class="role-badge">@player.Role</span>
@@ -271,12 +328,8 @@ else
                             <span class="kills">@player.Kills</span>/<span class="deaths">@player.Deaths</span>/<span class="assists">@player.Assists</span>
                         </span>
                     </td>
-                    <td>
-                        <span class="stat-value">@player.CS</span>
-                    </td>
-                    <td>
-                        <span class="stat-value">@player.GoldEarned.ToString("N0")</span>
-                    </td>
+                    <td><span class="stat-value">@player.CS</span></td>
+                    <td><span class="stat-value">@player.GoldEarned.ToString("N0")</span></td>
                     <td>
                         <span class="team-badge">@(player.Team?.TeamName ?? "—")</span>
                     </td>
@@ -284,6 +337,17 @@ else
                         <span class="team-badge @(player.Win ? "win-badge" : "loss-badge")">
                             @(player.Win ? "✅ Win" : "❌ Loss")
                         </span>
+                    </td>
+                    <td>
+                        <span class="match-date">
+                            @(player.Match != null ? player.Match.GameCreation.ToString("d.M.yyyy") : "—")
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-links">
+                            <a asp-controller="Player" asp-action="Edit" asp-route-id="@player.Id" class="action-link">Edit</a>
+                            <a asp-controller="Player" asp-action="Delete" asp-route-id="@player.Id" class="action-link delete">Delete</a>
+                        </div>
                     </td>
                 </tr>
             }

@@ -3,38 +3,36 @@ using Microsoft.AspNetCore.Mvc;
 using PostMatchSummary.Models;
 using PostMatchSummary.Services;
 
-namespace PostMatchSummary.Controllers;
-
-public class HomeController : Controller
+namespace PostMatchSummary.Controllers
 {
-    private readonly MatchCacheService _cacheService;
-
-    public HomeController(MatchCacheService cacheService)
+    public class HomeController : Controller
     {
-        _cacheService = cacheService;
-    }
+        private readonly MatchCacheService _cache;
 
-    [Route("")]
-    [Route("home")]
-    [Route("home/index")]
-    public IActionResult Index()
-    {
-        ViewBag.MatchCache = _cacheService;
-        return View();
-    }
+        public HomeController(MatchCacheService cache)
+        {
+            _cache = cache;
+        }
 
-    [Route("home/error")]
-    [Route("error")]
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-    }
+        [Route("")]
+        [Route("home")]
+        public IActionResult Index()
+        {
+            ViewBag.MatchCache = _cache;
+            return View();
+        }
 
-    [Route("about")]
-    public IActionResult About()
-    {
-        ViewBag.Title = "O Aplikaciji";
-        return View();
+        [Route("home/error")]
+        [Route("error")]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error() =>
+            View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+
+        [Route("about")]
+        public IActionResult About()
+        {
+            ViewBag.Title = "About";
+            return View();
+        }
     }
 }

@@ -1,0 +1,203 @@
+@model List<PostMatchSummary.Models.Champion>
+
+@{
+    ViewData["Title"] = "Champions from Games";
+    string currentSort = ViewBag.CurrentSort as string ?? "name_asc";
+    string appearanceSort = ViewBag.AppearanceSort as string ?? "appearances_desc";
+    string nameSort = ViewBag.NameSort as string ?? "name_desc";
+}
+
+<style>
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 24px;
+        font-size: 14px;
+    }
+
+    .breadcrumb {
+        margin-bottom: 32px;
+        font-size: 14px;
+    }
+
+    .breadcrumb-item.active {
+        color: var(--text-primary);
+    }
+
+    .breadcrumb-item a {
+        color: var(--accent-red);
+        text-decoration: none;
+    }
+
+    .breadcrumb-item a:hover {
+        text-decoration: underline;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .champions-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-surface);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .champions-table thead {
+        background: var(--bg-elevated);
+        border-bottom: 2px solid var(--accent-red);
+    }
+
+    .champions-table th {
+        padding: 16px 12px;
+        text-align: left;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .champions-table td {
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--bg-elevated);
+        color: var(--text-primary);
+    }
+
+    .champions-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .champions-table tbody tr:hover {
+        background: var(--bg-elevated);
+        transform: scale(1.01);
+    }
+
+    .champions-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .champions-table .champion-badge-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+    }
+
+    .champions-table .champion-badge-with-icon {
+        gap: 12px;
+    }
+
+    .champions-table .champion-badge-name {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .sort-link {
+    color: var(--text-primary);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    }
+
+    .sort-link:hover {
+        color: var(--accent-red);
+    }
+
+    .sort-indicator {
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+</style>
+
+<nav class="breadcrumb-nav">
+    <a href="/" style="color: var(--accent-red); text-decoration: none;">🏠 Home</a>
+    <span style="color: var(--text-muted);">›</span>
+    <a href="/champions" style="color: var(--accent-red); text-decoration: none;">⚔️ Champions</a>
+    <span style="color: var(--text-muted);">›</span>
+    <span style="color: var(--text-primary);">From Games</span>
+</nav>
+
+<div class="page-header">
+    <h1 class="page-title">Champions from Games</h1>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <p>No champions found</p>
+    </div>
+}
+else
+{
+    <table class="champions-table">
+        <thead>
+            <tr>
+                <th>
+                    <a class="sort-link" href="/api/champions/from-games?sort=@nameSort">
+                        Name
+                        @if (currentSort == "name_desc")
+                        {
+                            <span class="sort-indicator">↓</span>
+                        }
+                        else if (currentSort == "name_asc")
+                        {
+                            <span class="sort-indicator">↑</span>
+                        }
+                    </a>
+                </th>
+                <th>
+                    <a class="sort-link" href="/api/champions/from-games?sort=@appearanceSort">
+                        Appearances
+                        @if (currentSort == "appearances_desc")
+                        {
+                            <span class="sort-indicator">↓</span>
+                        }
+                        else if (currentSort == "appearances_asc")
+                        {
+                            <span class="sort-indicator">↑</span>
+                        }
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var champion in Model)
+            {
+                <tr>
+                    <td>@await Html.PartialAsync("_ChampionBadge", champion)</td>
+                    <td>@champion.Players.Count</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

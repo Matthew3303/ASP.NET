@@ -1,0 +1,586 @@
+@model PostMatchSummary.Models.PlayerSearchResult
+
+@{
+    ViewData["Title"] = Model.GameName;
+    bool isPreview = ViewBag.IsPreview == true;
+    string? highlightMatch = ViewBag.HighlightMatch as string;
+
+    string RankColor(string tier) => (tier ?? "").ToUpper() switch
+    {
+        "IRON"         => "#a0a0a0",
+        "BRONZE"       => "#cd7f32",
+        "SILVER"       => "#c0c0c0",
+        "GOLD"         => "#ffd700",
+        "PLATINUM"     => "#00e5cc",
+        "EMERALD"      => "#00c853",
+        "DIAMOND"      => "#6ab4f5",
+        "MASTER"       => "#9f4fcc",
+        "GRANDMASTER"  => "#e84057",
+        "CHALLENGER"   => "#f4c874",
+        _              => "#8892a4"
+    };
+
+    string rankColor = RankColor(Model.RankTier);
+
+    int dbTotalMatches = ViewBag.DbTotalMatches ?? 0;
+    int dbWins = ViewBag.DbWins ?? 0;
+    int dbLosses = ViewBag.DbLosses ?? 0;
+    double dbAvgKills = ViewBag.DbAvgKills ?? 0.0;
+    double dbAvgDeaths = ViewBag.DbAvgDeaths ?? 0.0;
+    double dbAvgAssists = ViewBag.DbAvgAssists ?? 0.0;
+    double dbAvgCS = ViewBag.DbAvgCS ?? 0.0;
+    double dbAvgGold = ViewBag.DbAvgGold ?? 0.0;
+    double dbAvgKda = ViewBag.DbAvgKda ?? 0.0;
+    int dbWinRate = ViewBag.DbWinRate ?? 0;
+}
+
+<style>
+    .sr-wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+    .profile-card {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        background: #16213e;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px;
+        padding: 24px 28px;
+        margin-bottom: 28px;
+    }
+
+    .profile-icon-wrap { position: relative; flex-shrink: 0; }
+
+    .profile-icon {
+        width: 88px; height: 88px;
+        border-radius: 12px;
+        border: 3px solid rgba(255,255,255,0.12);
+        object-fit: cover;
+        display: block;
+    }
+
+    .profile-level {
+        position: absolute;
+        bottom: -10px; left: 50%;
+        transform: translateX(-50%);
+        background: #0f3460;
+        border: 2px solid #16213e;
+        color: #a0b4cc;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 1px 8px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+
+    .profile-main { flex: 1; padding-top: 4px; }
+
+    .profile-name {
+        font-size: 26px;
+        font-weight: 800;
+        color: #e8eaf0;
+        line-height: 1.1;
+    }
+
+    .profile-tag { color: #5a6a82; font-weight: 500; font-size: 20px; }
+
+    .profile-meta {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #5a6a82;
+    }
+
+    .rank-block { text-align: right; flex-shrink: 0; }
+
+    .rank-name {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+
+    .rank-lp { font-size: 12px; color: #5a6a82; margin-top: 2px; }
+
+    .winrate-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        justify-content: flex-end;
+    }
+
+    .wr-label { font-size: 11px; color: #5a6a82; }
+
+    .wr-bar {
+        width: 120px; height: 6px;
+        background: #0d1b2a;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .wr-fill { height: 100%; background: #e94560; border-radius: 3px; }
+
+    .wr-pct {
+        font-size: 12px;
+        font-weight: 700;
+        color: #e8eaf0;
+        min-width: 36px;
+        text-align: right;
+    }
+
+    .section-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #8892a4;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+    }
+
+    .section-head::before {
+        content: '';
+        width: 3px; height: 16px;
+        background: #e94560;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .preview-notice {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(233, 69, 96, 0.1);
+        border: 1px solid rgba(233, 69, 96, 0.3);
+        color: #e94560;
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 4px;
+        margin-bottom: 16px;
+    }
+
+    .match-card {
+        background: #16213e;
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 10px;
+        margin-bottom: 8px;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 5px 1fr;
+        cursor: pointer;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .match-card:hover { border-color: rgba(255,255,255,0.15); }
+
+    .match-card.highlighted {
+        border-color: #e94560;
+        box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.25);
+    }
+
+    .match-bar.win  { background: #00b894; }
+    .match-bar.loss { background: #e94560; }
+
+    .match-body {
+        padding: 14px 18px;
+        display: grid;
+        grid-template-columns: 110px 1fr auto;
+        gap: 12px;
+        align-items: start;
+    }
+
+    .match-result {
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 3px;
+    }
+
+    .match-result.win  { color: #00b894; }
+    .match-result.loss { color: #e94560; }
+
+    .match-mode {
+        font-size: 10px;
+        font-weight: 700;
+        color: #5a6a82;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+    }
+
+    .match-date { font-size: 11px; color: #3d4f66; }
+    .match-dur  { font-size: 11px; color: #3d4f66; margin-top: 1px; }
+
+    .preview-tag {
+        font-size: 10px;
+        color: #e94560;
+        opacity: 0.6;
+        margin-top: 4px;
+        font-style: italic;
+    }
+
+    .teams-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px 16px;
+    }
+
+    .team-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+
+    .team-label.blue { color: #4a90e2; }
+    .team-label.red  { color: #e94560; }
+
+    .player-pill {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: #6a7a8f;
+        padding: 2px 0;
+        border-radius: 3px;
+        text-decoration: none;
+        transition: color 0.15s, background 0.15s, padding-left 0.15s;
+    }
+
+    .player-pill.clickable { cursor: pointer; }
+
+    .player-pill.clickable:hover {
+        color: #e8eaf0;
+        background: rgba(233, 69, 96, 0.08);
+        padding-left: 4px;
+    }
+
+    .player-pill.highlight {
+        color: #e8eaf0;
+        font-weight: 700;
+    }
+
+    .player-pill .champ { font-size: 10px; color: #4a5a6f; }
+    .player-pill.highlight .champ { color: #e94560; }
+
+    .player-pill-dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: #e94560;
+        flex-shrink: 0;
+    }
+
+    .kda-block { text-align: right; min-width: 140px; }
+
+    .kda-score {
+        font-size: 18px;
+        font-weight: 800;
+        color: #e8eaf0;
+        letter-spacing: 0.5px;
+    }
+
+    .kda-ratio { font-size: 11px; color: #5a6a82; margin-top: 2px; }
+    .kda-stats { font-size: 11px; color: #3d4f66; margin-top: 4px; }
+
+    .profile-stats {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .profile-stat {
+        text-align: center;
+    }
+
+    .profile-stat-value {
+        font-size: 22px;
+        font-weight: 700;
+        font-family: 'Consolas', monospace;
+        color: var(--text-primary);
+    }
+
+    .profile-stat-label {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .no-matches {
+        text-align: center;
+        padding: 48px;
+        color: #3d4f66;
+        font-size: 14px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #4a5a6f;
+        text-decoration: none;
+        margin-bottom: 18px;
+        transition: color 0.15s;
+    }
+
+    .back-link:hover { color: #e94560; }
+
+    @@media (max-width: 640px) {
+        .match-body { grid-template-columns: 1fr; }
+        .profile-card { flex-direction: column; text-align: center; }
+        .rank-block { text-align: center; }
+        .winrate-row { justify-content: center; }
+        .teams-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="sr-wrap">
+
+    <a class="back-link" href="/api/players/search-riot">← Back to Search</a>
+
+    <div class="profile-card">
+        <div class="profile-icon-wrap">
+            <img class="profile-icon"
+                 src="https://ddragon.leagueoflegends.com/cdn/14.10.1/img/profileicon/@(Model.ProfileIconId).png"
+                 alt="@Model.GameName"
+                 onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.10.1/img/profileicon/29.png'" />
+            <span class="profile-level">Lv. @Model.SummonerLevel</span>
+        </div>
+
+        <div class="profile-main">
+            <div class="profile-name">
+                @Model.GameName <span class="profile-tag">#@Model.TagLine</span>
+            </div>
+
+            <div class="profile-meta">
+                @Model.RecentMatches.Count ranked solo matches fetched
+                @if (dbTotalMatches > 0)
+                {
+                    <span style="margin-left:8px;">· @dbTotalMatches match(es) in local DB</span>
+                }
+                @if (isPreview)
+                {
+                    <span style="color:#e94560; margin-left:8px;">· Preview mode</span>
+                }
+            </div>
+
+            @if (dbTotalMatches > 0)
+            {
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" style="color:var(--win);">@dbAvgKills.ToString("F1")</div>
+                        <div class="profile-stat-label">Avg Kills</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" style="color:var(--loss);">@dbAvgDeaths.ToString("F1")</div>
+                        <div class="profile-stat-label">Avg Deaths</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" style="color:var(--accent-gold);">@dbAvgAssists.ToString("F1")</div>
+                        <div class="profile-stat-label">Avg Assists</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value">@dbAvgKda.ToString("F2")</div>
+                        <div class="profile-stat-label">Avg KDA</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value">@dbAvgCS.ToString("F0")</div>
+                        <div class="profile-stat-label">Avg CS</div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="rank-block">
+            @if (string.IsNullOrEmpty(Model.RankTier))
+            {
+                <div class="rank-name" style="color:#5a6a82;">Unranked</div>
+            }
+            else
+            {
+                <div class="rank-name" style="color:@rankColor">@Model.Rank</div>
+                <div class="rank-lp">@Model.LeaguePoints LP</div>
+                <div class="winrate-row">
+                    <span class="wr-label">@Model.Wins W / @Model.Losses L</span>
+                    <div class="wr-bar">
+                        <div class="wr-fill" style="width:@(Model.WinRate)%"></div>
+                    </div>
+                    <span class="wr-pct">@(Model.WinRate)%</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="section-head">Recent Matches (Ranked Solo)</div>
+
+    @if (isPreview)
+    {
+        <div class="preview-notice">
+            👁️ Preview mode
+        </div>
+    }
+
+    @if (!Model.RecentMatches.Any())
+    {
+        <div class="no-matches">No ranked solo matches found.</div>
+    }
+    else
+    {
+        foreach (var match in Model.RecentMatches)
+        {
+            var me = match.Players.FirstOrDefault(p =>
+                p.SummonerName.Equals(Model.GameName, StringComparison.OrdinalIgnoreCase))
+                ?? match.Players.FirstOrDefault();
+
+            bool isWin = me?.Win ?? false;
+            string resultClass = isWin ? "win" : "loss";
+            string resultLabel = isWin ? "VICTORY" : "DEFEAT";
+            var myTeamId = me?.Team?.TeamId ?? 0;
+
+            var myTeam = match.Players
+                .Where(p => p.Team?.TeamId == myTeamId)
+                .OrderBy(p => p.Role)
+                .ToList();
+
+            var enemyTeam = match.Players
+                .Where(p => p.Team?.TeamId != myTeamId)
+                .OrderBy(p => p.Role)
+                .ToList();
+
+            if (!myTeam.Any() || !enemyTeam.Any())
+            {
+                var all = match.Players.ToList();
+                myTeam    = all.Take(5).ToList();
+                enemyTeam = all.Skip(5).ToList();
+            }
+
+            bool isBlueTeam = myTeamId == 100;
+
+            double kdaVal = me != null && me.Deaths > 0
+                ? Math.Round((double)(me.Kills + me.Assists) / me.Deaths, 2)
+                : (double)(me?.Kills + me?.Assists ?? 0);
+
+            string matchHref = isPreview
+                ? $"/api/matches/preview/{match.MatchId}"
+                : $"/api/matches/{match.MatchId}";
+
+            bool isHighlighted = !string.IsNullOrEmpty(highlightMatch) &&
+                match.MatchId == highlightMatch;
+
+            <div class="match-card @(isHighlighted ? "highlighted" : "")"
+                 id="match-@match.MatchId"
+                 onclick="window.location.href='@matchHref'">
+                <div class="match-bar @resultClass"></div>
+                <div class="match-body">
+
+                    <div>
+                        <div class="match-result @resultClass">@resultLabel</div>
+                        <div class="match-mode">@match.GameMode</div>
+                        <div class="match-date">@match.GameCreation.ToString("d.M.yyyy HH:mm")</div>
+                        <div class="match-dur">@(match.Duration / 60)m @(match.Duration % 60)s</div>
+                        @if (isPreview)
+                        {
+                            <div class="preview-tag">preview</div>
+                        }
+                    </div>
+
+                    <div class="teams-grid">
+                        <div>
+                            <div class="team-label @(isBlueTeam ? "blue" : "red")">
+                                @(isBlueTeam ? "🔵 Blue (My Team)" : "🔴 Red (My Team)")
+                            </div>
+                            @foreach (var p in myTeam)
+                            {
+                                bool isMe = p.SummonerName.Equals(Model.GameName, StringComparison.OrdinalIgnoreCase);
+                                bool clickable = !string.IsNullOrEmpty(p.RiotId);
+
+                                // IZMJENA: isMe u preview modu vodi na preview, inače na search-riot
+                                var playerHref = isMe
+                                    ? (isPreview
+                                        ? $"/api/players/preview?riotId={Uri.EscapeDataString(p.RiotId ?? "")}"
+                                        : $"/api/players/search-riot?riotId={Uri.EscapeDataString(p.RiotId ?? "")}")
+                                    : $"/api/players/preview?riotId={Uri.EscapeDataString(p.RiotId ?? "")}&highlightMatch={Uri.EscapeDataString(match.MatchId)}";
+
+                                if (clickable)
+                                {
+                                    <a href="@playerHref"
+                                       class="player-pill @(isMe ? "highlight" : "") clickable"
+                                       onclick="event.stopPropagation();">
+                                        @if (isMe) { <span class="player-pill-dot"></span> }
+                                        <span>@p.SummonerName</span>
+                                        <span class="champ">— @(p.Champion?.Name ?? "?")</span>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="player-pill @(isMe ? "highlight" : "")">
+                                        @if (isMe) { <span class="player-pill-dot"></span> }
+                                        <span>@p.SummonerName</span>
+                                        <span class="champ">— @(p.Champion?.Name ?? "?")</span>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <div>
+                            <div class="team-label @(isBlueTeam ? "red" : "blue")">
+                                @(isBlueTeam ? "🔴 Red (Enemy)" : "🔵 Blue (Enemy)")
+                            </div>
+                            @foreach (var p in enemyTeam)
+                            {
+                                bool clickable = !string.IsNullOrEmpty(p.RiotId);
+                                var playerHref = $"/api/players/preview?riotId={Uri.EscapeDataString(p.RiotId ?? "")}&highlightMatch={Uri.EscapeDataString(match.MatchId)}";
+
+                                if (clickable)
+                                {
+                                    <a href="@playerHref"
+                                       class="player-pill clickable"
+                                       onclick="event.stopPropagation();">
+                                        <span>@p.SummonerName</span>
+                                        <span class="champ">— @(p.Champion?.Name ?? "?")</span>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="player-pill">
+                                        <span>@p.SummonerName</span>
+                                        <span class="champ">— @(p.Champion?.Name ?? "?")</span>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    @if (me != null)
+                    {
+                        <div class="kda-block">
+                            <div class="kda-score">@me.Kills / @me.Deaths / @me.Assists</div>
+                            <div class="kda-ratio">@kdaVal KDA</div>
+                            <div class="kda-stats">@me.CS CS · @me.GoldEarned.ToString("N0") gold</div>
+                            <div class="kda-stats" style="margin-top:2px;">
+                                @(me.Champion?.Name ?? "") — @me.Role
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        }
+    }
+
+</div>
+
+@if (!string.IsNullOrEmpty(highlightMatch))
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var el = document.getElementById("match-@highlightMatch");
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        });
+    </script>
+}

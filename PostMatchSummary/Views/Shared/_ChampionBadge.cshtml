@@ -1,0 +1,16 @@
+@model PostMatchSummary.Models.Champion
+
+<span class="champion-badge champion-badge-with-icon">
+    @if (Model != null)
+    {
+        <img class="champion-badge-icon"
+             src="https://ddragon.leagueoflegends.com/cdn/14.10.1/img/champion/@(Model.Name).png"
+             alt="@Model.Name"
+             onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.10.1/img/champion/Aatrox.png'" />
+        <span class="champion-badge-name">@Model.Name</span>
+    }
+    else
+    {
+        <span class="champion-badge-name">Unknown</span>
+    }
+</span>

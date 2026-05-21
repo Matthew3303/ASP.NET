@@ -1,0 +1,281 @@
+@model object
+@{
+    var fieldName = ViewData["fieldName"]?.ToString() ?? "EntityId";
+    var endpoint = ViewData["endpoint"]?.ToString() ?? "/api/champions/search";
+    var displayField = ViewData["displayField"]?.ToString() ?? "name";
+    var selectedId = ViewData["selectedId"] ?? string.Empty;
+    var selectedLabel = ViewData["selectedLabel"]?.ToString() ?? string.Empty;
+}
+
+<style>
+    .autocomplete-container {
+        position: relative;
+        margin-bottom: 12px;
+    }
+
+    .autocomplete-input {
+        width: 100%;
+        padding: 10px 12px;
+        background: var(--bg-elevated);
+        border: 2px solid var(--bg-surface);
+        color: var(--text-primary);
+        border-radius: 4px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .autocomplete-input:focus {
+        outline: none;
+        border-color: var(--accent-red);
+        box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
+    }
+
+    .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-elevated);
+        border: 1px solid var(--accent-red);
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+        z-index: 100;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .autocomplete-dropdown.show {
+        display: block;
+    }
+
+    .autocomplete-item {
+        padding: 10px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--bg-surface);
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+    .autocomplete-item:hover {
+        background: var(--bg-surface);
+        color: var(--accent-red);
+    }
+
+    .autocomplete-item:last-child {
+        border-bottom: none;
+    }
+
+    .autocomplete-item.selected {
+        background: var(--accent-red);
+        color: var(--text-primary);
+    }
+
+    .autocomplete-empty {
+        padding: 10px 12px;
+        color: var(--text-muted);
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .autocomplete-loading {
+        padding: 10px 12px;
+        color: var(--text-muted);
+        text-align: center;
+        font-size: 12px;
+    }
+</style>
+
+<div class="autocomplete-container">
+    <input type="text" 
+           class="autocomplete-input"
+           id="@(fieldName)_display"
+           placeholder="Start typing to search..."
+           autocomplete="off"
+           value="@selectedLabel"
+           data-endpoint="@endpoint"
+           data-display-field="@displayField"
+           data-field-name="@fieldName" />
+    <div class="autocomplete-dropdown" id="@(fieldName)_dropdown"></div>
+    <input type="hidden" id="@fieldName" name="@fieldName" value="@selectedId" />
+</div>
+
+<script>
+    $(function () {
+        var fieldName = '@fieldName';
+        var endpoint = '@endpoint';
+        var displayField = '@displayField';
+        
+        var displayInput = $('#' + fieldName + '_display');
+        var dropdown = $('#' + fieldName + '_dropdown');
+        var hiddenInput = $('#' + fieldName);
+        var allItems = [];
+        var filteredItems = [];
+        var selectedIndex = -1;
+        var debounceTimer;
+
+        function loadAll() {
+            $.ajax({
+                url: endpoint,
+                method: 'GET',
+                data: { q: '' },
+                success: function (data) {
+                    allItems = data || [];
+                }
+            });
+        }
+
+        function renderDropdown(items) {
+            dropdown.empty();
+            selectedIndex = -1;
+
+            if (items.length === 0) {
+                dropdown.html('<div class="autocomplete-empty">No results found</div>').addClass('show');
+                filteredItems = [];
+                return;
+            }
+
+            filteredItems = items;
+
+            $.each(items, function (i, item) {
+                var div = $('<div class="autocomplete-item">')
+                    .text(item[displayField])
+                    .attr('data-id', item.id)
+                    .attr('data-label', item[displayField])
+                    .attr('data-index', i);
+                dropdown.append(div);
+            });
+
+            dropdown.addClass('show');
+
+            dropdown.find('.autocomplete-item').on('click', function () {
+                selectItem($(this).data('id'), $(this).data('label'));
+            });
+        }
+
+        function selectItem(id, label) {
+            hiddenInput.val(id);
+            displayInput.val(label);
+            dropdown.removeClass('show').html('');
+            filteredItems = [];
+            selectedIndex = -1;
+        }
+
+        function highlightItem(index) {
+            dropdown.find('.autocomplete-item').removeClass('selected');
+            if (index >= 0 && index < filteredItems.length) {
+                var item = dropdown.find('.autocomplete-item[data-index="' + index + '"]');
+                item.addClass('selected');
+                item[0].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        // Keyboard navigation
+        displayInput.on('keydown', function (e) {
+            var isOpen = dropdown.hasClass('show') && filteredItems.length > 0;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!isOpen) {
+                    renderDropdown(allItems.length > 0 ? allItems : filteredItems);
+                    return;
+                }
+                selectedIndex = Math.min(selectedIndex + 1, filteredItems.length - 1);
+                highlightItem(selectedIndex);
+            }
+            else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, 0);
+                highlightItem(selectedIndex);
+            }
+            else if (e.key === 'Tab' || e.key === 'Enter') {
+                if (isOpen && selectedIndex >= 0) {
+                    e.preventDefault();
+                    var item = filteredItems[selectedIndex];
+                    selectItem(item.id, item[displayField]);
+                } else if (isOpen && filteredItems.length > 0) {
+                    // Tab/Enter bez selectanog — uzmi prvi
+                    e.preventDefault();
+                    var first = filteredItems[0];
+                    selectItem(first.id, first[displayField]);
+                } else {
+                    // Provjeri je li upisan točan naziv
+                    var typed = displayInput.val().trim().toLowerCase();
+                    var exact = allItems.find(function(i) {
+                        return i[displayField].toLowerCase() === typed;
+                    });
+                    if (exact) {
+                        selectItem(exact.id, exact[displayField]);
+                    }
+                }
+            }
+            else if (e.key === 'Escape') {
+                dropdown.removeClass('show').html('');
+                selectedIndex = -1;
+            }
+        });
+
+        displayInput.on('focus', function () {
+            if (allItems.length > 0) {
+                renderDropdown(allItems);
+            } else {
+                loadAll();
+            }
+        });
+
+        displayInput.on('input', function () {
+            var query = $(this).val().trim();
+            hiddenInput.val('');
+            selectedIndex = -1;
+
+            clearTimeout(debounceTimer);
+
+            if (query.length === 0) {
+                renderDropdown(allItems);
+                return;
+            }
+
+            debounceTimer = setTimeout(function () {
+                dropdown.html('<div class="autocomplete-loading">🔍 Searching...</div>').addClass('show');
+                $.ajax({
+                    url: endpoint,
+                    method: 'GET',
+                    data: { q: query },
+                    success: function (data) {
+                        renderDropdown(data);
+                    },
+                    error: function () {
+                        dropdown.html('<div class="autocomplete-empty">Error searching</div>').addClass('show');
+                    }
+                });
+            }, 200);
+        });
+
+        // Blur — provjeri točan naziv
+        displayInput.on('blur', function () {
+            setTimeout(function () {
+                dropdown.removeClass('show');
+                var typed = displayInput.val().trim().toLowerCase();
+                if (typed && !hiddenInput.val()) {
+                    var exact = allItems.find(function(i) {
+                        return i[displayField].toLowerCase() === typed;
+                    });
+                    if (exact) {
+                        selectItem(exact.id, exact[displayField]);
+                    }
+                }
+            }, 200);
+        });
+
+        $(document).on('click', function (e) {
+            if (!$('#ac_wrapper_' + fieldName).length || !$('#ac_wrapper_' + fieldName)[0].contains(e.target)) {
+                dropdown.removeClass('show');
+            }
+        });
+
+        loadAll();
+    });
+</script>
